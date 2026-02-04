@@ -3,53 +3,101 @@ from typing import Optional
 from utils.config import MODELO_EMBEDDING
 from milvus.services import hybrid_search, build_context
 from llm.openai.llm import llamar_llm_openai
-from llm.openai.prompts import rag_system_prompt
+from llm.openai.prompts import rag_system_prompt, generate_multi_queries_prompt
 
+
+def generate_multiquery(pregunta: str, n: int = 3) -> list[str]:
+    """
+    Genera múltiples reformulaciones semánticamente equivalentes de una
+    consulta original para mejorar el recall durante la recuperación.
+
+    :param pregunta: Consulta original del usuario.
+    :type pregunta: str
+    :param n: Número de reformulaciones adicionales a generar.
+    :type n: int
+    :return: Lista de consultas reformuladas, incluyendo la original.
+    :rtype: list[str]
+    """
+
+    prompt = generate_multi_queries_prompt(pregunta=pregunta, n=n)
+
+    response = llamar_llm_openai(prompt_usuario=prompt)
+
+    queries = [q.strip() for q in response.split("\n") if q.strip()]
+
+    return [pregunta] + queries
+
+def multi_query_hybrid_search(pregunta: str,collection_name: str = "Pruebas",top_k: int = 5,n_queries: int = 3) -> list[str]:
+    """
+    Ejecuta una búsqueda híbrida utilizando múltiples reformulaciones
+    de la consulta original y fusiona los resultados obtenidos.
+
+    :param pregunta: Consulta original del usuario.
+    :type pregunta: str
+    :param collection_name: Nombre de la colección de Milvus.
+    :type collection_name: str
+    :param top_k: Número de resultados a recuperar por reformulación.
+    :type top_k: int
+    :param n_queries: Número de reformulaciones a generar.
+    :type n_queries: int
+    :return: Lista fusionada de fragmentos relevantes sin duplicados.
+    :rtype: list[str]
+    """
+
+    queries = generate_multiquery(pregunta, n=n_queries)
+
+    seen = set()
+    merged = []
+
+    for q in queries:
+        query_vector = MODELO_EMBEDDING.embed_query(q)
+
+        chunks = hybrid_search(
+            query=q,
+            query_vector=query_vector,
+            collection_name=collection_name,
+            top_k=top_k
+        )
+
+        for chunk in chunks:
+            if chunk not in seen:
+                seen.add(chunk)
+                merged.append(chunk)
+
+    return merged
 
 def rag_system_call(pregunta: str,collection_name: str = "Pruebas",top_k: int = 5,id_chat: Optional[str] = None) -> str:
-    '''
+    """
     Orquesta el flujo completo de un sistema RAG (Retrieval-Augmented Generation),
-    combinando búsqueda híbrida en una base de datos vectorial y generación de
-    respuestas mediante un modelo de lenguaje.
-
-    El proceso incluye la vectorización de la consulta del usuario, la recuperación
-    de fragmentos relevantes mediante búsqueda semántica y léxica, la construcción
-    de un contexto controlado y la generación final de la respuesta utilizando
-    un LLM. Si no se recupera información relevante, se devuelve un mensaje
-    indicando la falta de contexto suficiente.
+    incorporando expansión de consultas (multi-query), búsqueda híbrida y
+    generación de respuestas mediante un modelo de lenguaje.
 
     :param pregunta: Consulta formulada por el usuario en lenguaje natural.
     :type pregunta: str
-    :param collection_name: Nombre de la colección de Milvus que contiene los
-                            datos indexados utilizados para la recuperación.
+    :param collection_name: Nombre de la colección de Milvus utilizada.
     :type collection_name: str
-    :param top_k: Número máximo de fragmentos relevantes que se utilizarán para
-                  construir el contexto pasado al modelo de lenguaje.
+    :param top_k: Número máximo de fragmentos que se usarán como contexto.
     :type top_k: int
-    :param id_chat: Identificador opcional de la conversación, utilizado para
-                    mantener trazabilidad o contexto conversacional entre
-                    interacciones sucesivas.
+    :param id_chat: Identificador opcional de conversación.
     :type id_chat: Optional[str]
-    :return: Respuesta generada por el modelo de lenguaje basada exclusivamente
-             en el contexto recuperado.
+    :return: Respuesta generada por el modelo de lenguaje.
     :rtype: str
-    '''
+    """
 
-    query_vector = MODELO_EMBEDDING.embed_query(pregunta)
-
-    chunks = hybrid_search(
-        query=pregunta,
-        query_vector=query_vector,
+    chunks = multi_query_hybrid_search(
+        pregunta=pregunta,
         collection_name=collection_name,
-        top_k=top_k * 2
+        top_k=top_k * 2,
+        n_queries=3
     )
 
     if not chunks:
         return "No tengo información suficiente para responder."
 
-    context = build_context(chunks[:top_k])
 
+    context = build_context(chunks[:top_k])
     system_prompt = rag_system_prompt(context=context)
+
 
     return llamar_llm_openai(
         prompt_usuario=pregunta,
