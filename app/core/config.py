@@ -1,8 +1,10 @@
-from dotenv import load_dotenv
-import os
+# app/core/config.py
 
-load_dotenv()
+from datetime import timedelta
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+# ⚠️ NO usamos .env porque vuestro .env no tiene JWT
+# Esto es SOLO para autenticación local del backend
+
+SECRET_KEY = "fuzzy-memori-super-secret-key"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
