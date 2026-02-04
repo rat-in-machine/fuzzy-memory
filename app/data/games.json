@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Cyberpunk 2077",
+    "genres": ["RPG", "Acción", "Mundo Abierto"],
+    "developer": "CD Projekt Red"
+  },
+  {
+    "id": 2,
+    "name": "Stardew Valley",
+    "genres": ["Indie", "Simulación", "RPG"],
+    "developer": "ConcernedApe"
+  }
+]
