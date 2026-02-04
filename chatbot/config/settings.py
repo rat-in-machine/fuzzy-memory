@@ -15,6 +15,17 @@ class Settings(BaseSettings):
     """
     
     # ========================================================================
+    # CONFIGURACIÓN DE LLM CON STREAMING (CodingBuddy - OpenAI Compatible)
+    # ========================================================================
+    llm_api_endpoint: str = "https://ia-research-dev.codingbuddy-4282826dce7d155229a320302e775459-0000.eu-de.containers.appdomain.cloud/research/llm/stream/openai/clients"  # Endpoint LLM
+    llm_api_key: Optional[str] = None  # Clave API para LLM (X-API-KEY)
+    llm_model: str = "gpt-4o"  # Modelo LLM: gpt-4o, gpt-4-turbo, etc.
+    llm_user_email: str = "ismael@research.com"  # Usuario registrado en CodingBuddy
+    llm_streaming_enabled: bool = True  # Habilitar streaming de respuestas
+    llm_max_tokens: int = 1500  # Tokens máximos por respuesta
+    llm_temperature: float = 0.7  # Temperatura: 0=determinista, 1=creativo
+    
+    # ========================================================================
     # CONFIGURACIÓN DE OPENAI (APIs de LLM y Embeddings)
     # ========================================================================
     openai_api_key: Optional[str] = None  # Clave API de OpenAI

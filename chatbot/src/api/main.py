@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 import logging
 import sys
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -537,6 +538,190 @@ async def chat(request: ChatRequest):
     except Exception as e:
         logger.error(f"Error en /chat: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error procesando consulta: {str(e)}")
+
+
+@app.post("/chat/stream", tags=["Chat"])
+async def chat_stream(request: ChatRequest):
+    """
+    💬 **CHAT CON STREAMING LLM EN VIVO**
+    
+    Endpoint que integra búsqueda de juegos + respuesta LLM con streaming en tiempo real.
+    
+    **Características:**
+    - Busca juegos relevantes en BD MongoDB
+    - LLM genera respuesta especializada en gaming
+    - Streaming de respuesta (chunk por chunk)
+    - Guarda historial completo de conversación
+    
+    **Flujo:**
+    1. Usuario envía consulta
+    2. Sistema busca 5 juegos más relevantes
+    3. LLM genera recomendación personalizada CON STREAMING
+    4. Respuesta se guarda en sesión para contexto futuro
+    
+    **Headers:**
+    ```
+    Content-Type: application/json
+    ```
+    
+    **Request:**
+    ```json
+    {
+        "query": "Dame juegos de rol épicos",
+        "session_id": "user_123"
+    }
+    ```
+    
+    **Response (Streaming):**
+    El endpoint retorna `text/event-stream` con chunks de respuesta:
+    ```
+    data: "Encontré juegos"
+    data: " de rol épicos"
+    data: " para ti:"
+    ...
+    ```
+    """
+    from fastapi.responses import StreamingResponse
+    from src.llm.client import LLMStreamingClient
+    from src.llm.prompts import get_system_prompt, PromptMode
+    import asyncio
+    
+    async def generate_stream():
+        """Generador asincrónico para streaming"""
+        try:
+            logger.info(f"Chat Stream - Consulta: '{request.query}'")
+            
+            # 1. Gestión de sesión
+            session_id = request.session_id
+            if session_id is None:
+                session_id = session_manager.create_session()
+            else:
+                session = session_manager.get_session(session_id)
+                if session is None:
+                    session_id = session_manager.create_session(session_id)
+            
+            # Guardar mensaje del usuario
+            session_manager.add_message(
+                session_id=session_id,
+                role="user",
+                content=request.query
+            )
+            
+            # 2. Buscar juegos relevantes
+            game_search = get_game_search()
+            query_lower = request.query.lower()
+            
+            # Mapping de géneros (igual que en /chat)
+            genre_mapping = {
+                "rol": "Rol", "acción": "Acción", "aventura": "Aventura",
+                "estrategia": "Estrategia", "simuladores": "Simuladores",
+                "deportes": "Deportes", "carreras": "Carreras",
+                "accion": "Acción", "simulador": "Simuladores",
+                "deporte": "Deportes", "carrera": "Carreras",
+                "rpg": "Rol", "action": "Acción", "adventure": "Aventura",
+                "strategy": "Estrategia", "simulation": "Simuladores",
+                "simulator": "Simuladores", "sports": "Deportes",
+                "sport": "Deportes", "racing": "Carreras", "race": "Carreras",
+                "casual": "Casual", "indie": "Indie",
+                "multijugador": "Multijugador masivo", "multiplayer": "Multijugador masivo",
+                "mmorpg": "Multijugador masivo",
+                "acceso anticipado": "Acceso anticipado", "early access": "Acceso anticipado",
+                "beta": "Acceso anticipado",
+                "free to play": "Free to Play", "f2p": "Free to Play",
+                "gratis": "Free to Play", "gratuito": "Free to Play",
+            }
+            
+            # Detectar intención
+            found_genre = None
+            for keyword, genre_name in genre_mapping.items():
+                if keyword in query_lower:
+                    found_genre = genre_name
+                    break
+            
+            # Buscar juegos
+            if found_genre:
+                games = game_search.search_by_genre(found_genre, limit=5)
+            else:
+                words = request.query.split()
+                search_terms = []
+                skip_words = {"de", "del", "el", "la", "los", "las", "un", "una", 
+                            "precio", "cuánto", "cuesta", "vale", "cuál", "es", "qué"}
+                for word in words:
+                    if word.lower() not in skip_words and len(word) > 2:
+                        search_terms.append(word)
+                search_query = " ".join(search_terms[:2]) if search_terms else request.query
+                games = game_search.search_by_name(search_query, limit=5)
+            
+            # 3. Construir contexto para LLM
+            context_games = []
+            for game in games:
+                game_info = f"- {game.get('name')} (Géneros: {', '.join(game.get('genres', []))})"
+                retail = game.get("current_price_retail")
+                if retail == 0:
+                    game_info += " [FREE-TO-PLAY]"
+                elif retail:
+                    game_info += f" - {retail:.2f}€"
+                context_games.append(game_info)
+            
+            games_context = "\n".join(context_games) if context_games else "No se encontraron juegos relevantes."
+            
+            # Construir mensaje para LLM
+            llm_message = f"""Usuario preguntó: {request.query}
+
+Juegos relevantes de nuestra base de datos:
+{games_context}
+
+Basándote en estos juegos, proporciona una recomendación amigable y entusiasta."""
+            
+            # 4. Inicializar cliente LLM
+            llm_client = LLMStreamingClient(
+                api_endpoint=settings.llm_api_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model
+            )
+            
+            # 5. Obtener system prompt especializado
+            system_prompt = get_system_prompt(PromptMode.RECOMMENDER)
+            
+            # 6. Streaming de respuesta
+            full_response = ""
+            
+            # Enviar mensaje inicial
+            yield f"data: {json.dumps({'type': 'start', 'games_found': len(games)})}\n\n"
+            
+            # Streaming del LLM
+            for chunk in llm_client.stream(
+                message=llm_message,
+                system_prompt=system_prompt,
+                temperature=settings.llm_temperature,
+                language="es"
+            ):
+                full_response += chunk
+                # Enviar chunk con escape JSON
+                yield f"data: {json.dumps({'type': 'content', 'chunk': chunk})}\n\n"
+                # Pequeña pausa para permitir consumo de datos
+                await asyncio.sleep(0.01)
+            
+            # 7. Guardar respuesta completa en sesión
+            session_manager.add_message(
+                session_id=session_id,
+                role="assistant",
+                content=full_response
+            )
+            
+            # Enviar finalización
+            yield f"data: {json.dumps({'type': 'done', 'session_id': session_id})}\n\n"
+            
+            logger.info(f"Stream completado - Session: {session_id}")
+            
+        except Exception as e:
+            logger.error(f"Error en /chat/stream: {e}", exc_info=True)
+            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream"
+    )
 
 
 @app.post("/chat/reset", tags=["Chat"])
