@@ -1,87 +1,244 @@
 # Chatbot RAG - Recomendador de Videojuegos
 
-## Descripción
-Chatbot basado en RAG (Retrieval-Augmented Generation) que recomienda videojuegos basándose en preferencias del usuario en lenguaje natural.
+## 📋 Descripción
+Sistema conversacional de recomendación de videojuegos basado en búsqueda inteligente en MongoDB, con soporte multiidioma (español e inglés) y precios en EUR desde GG.deals.
 
-## Arquitectura
+**Status Fase 1**: ✅ **COMPLETADA** - Búsqueda por género y nombre funcional
 
-### Componentes principales:
+## ✅ Características Implementadas (Fase 1)
 
-1. **Ingestion Pipeline** (`src/ingestion/`)
-   - Obtención de datos de Steam API
-   - Obtención de precios de GG.deals API
-   - Normalización y validación de datos
-   - Almacenamiento en BD interna
+- **12 géneros soportados**: Rol/RPG, Acción, Aventura, Estrategia, Simuladores, Deportes, Carreras, Casual, Indie, Multijugador masivo, Acceso anticipado, Free to Play
+- **Búsqueda multiidioma**: Detecta keywords en español e inglés, con y sin acentos
+- **Búsqueda por nombre**: Encuentra juegos específicos (case-insensitive)
+- **Precios EUR**: Muestra retail + keyshop desde GG.deals
+- **Sesiones persistentes**: Historial de conversación por usuario
+- **Metadatos completos**: Metacritic, desarrolladores, fecha lanzamiento
 
-2. **Embeddings** (`src/embeddings/`)
-   - Generación de embeddings de descripciones de juegos
-   - Vectorización de géneros y tags
-   - Almacenamiento en base vectorial (FAISS/ChromaDB)
+## 🏗️ Arquitectura Actual (Fase 1)
 
-3. **Retrieval** (`src/retrieval/`)
-   - Búsqueda semántica por similitud
-   - Filtrado por géneros y preferencias
-   - Ranking y reordenamiento
+### Componentes Principales:
 
-4. **LLM Chain** (`src/llm/`)
-   - Prompts estructurados para recomendación
-   - Integración con OpenAI/Anthropic
-   - Generación de explicaciones
-   - Validación de respuestas (no inventar datos)
+1. **FastAPI API** (`src/api/main.py`)
+   - 4 endpoints: `/chat`, `/chat/reset`, `/chat/history`, `/chat/stats`
+   - Request/Response models con Pydantic
+   - Detección inteligente de intención (género vs nombre)
 
-5. **API REST** (`src/api/`)
-   - Endpoints para chat
-   - Gestión de sesiones de conversación
-   - Historial de recomendaciones
+2. **GameSearchService** (`src/services/game_search.py`)
+   - Búsqueda por nombre (regex case-insensitive)
+   - Búsqueda por género (keyword matching flexible)
+   - Búsqueda por Steam ID
+   - Formateo de información de juegos
 
-## Stack Tecnológico
+3. **SessionManager** (`src/api/session_manager.py`)
+   - Gestiona sesiones independientes (timeout 60 min)
+   - Historial de mensajes por sesión
+   - Auto-cleanup de sesiones expiradas
 
-- **Framework**: LangChain / LlamaIndex
-- **LLM**: OpenAI GPT-4 / Claude
-- **Vector Store**: FAISS / ChromaDB
-- **API**: FastAPI
-- **Embeddings**: OpenAI text-embedding-3-small / sentence-transformers
-- **BD**: MongoDB (datos estructurados)
+4. **MongoDB Connection**
+   - 101 juegos en colección `games`
+   - Índices optimizados (name, genres)
+   - Conexión via PyMongo
 
-## Flujo de trabajo
+### Flujo de Procesamiento:
 
 ```
-Usuario → Query en lenguaje natural
+Usuario → /chat endpoint
     ↓
-Retrieval → Búsqueda vectorial en BD interna
+SessionManager: Crear/obtener sesión
     ↓
-Context → Top-K juegos relevantes
+Detectar intención (género o búsqueda por nombre)
     ↓
-LLM → Generación de recomendación + explicación
+GameSearchService: Consultar MongoDB con filtros
     ↓
-Respuesta → Justificada y basada en datos reales
+Formatear respuesta conversacional
+    ↓
+Guardar en historial de sesión
+    ↓
+Retornar ChatResponse con juegos + metadata
 ```
 
-## Restricciones
-- ❌ No inventa juegos ni precios
-- ❌ No accede en tiempo real a APIs externas
-- ✅ Solo responde con información de la BD interna
-- ✅ Explica el por qué de cada recomendación
-- ✅ Atribuye fuentes (Steam, GG.deals)
+### Componentes Próximos (Fase 2 - RAG)
 
-## Instalación
+- **Embeddings** (`src/embeddings/`): Vectorización con OpenAI API
+- **FAISS Retriever** (`src/retrieval/`): Búsqueda semántica
+- **LLM Chain** (`src/llm/`): Generación de respuestas avanzadas
 
+## 🛠️ Stack Tecnológico
+
+- **API**: FastAPI 0.109+
+- **Database**: MongoDB 7.0 (Docker)
+- **Client**: PyMongo 4.6+
+- **HTTP**: httpx
+- **Config**: Pydantic-settings
+- **Logging**: Python logging built-in
+- **Python**: 3.10+
+
+## 🚀 Instalación y Uso
+
+### 1. Requisitos
+```bash
+Python 3.10+
+MongoDB (Docker: docker-compose up -d)
+.env configurado (MONGODB_URI, GGDEALS_API_KEY)
+```
+
+### 2. Setup
 ```bash
 cd chatbot
 pip install -r requirements.txt
-cp .env.example .env
-# Configurar variables de entorno
 ```
 
-## Uso
+### 3. Ejecutar Servidor
 
+**Opción A: Direct uvicorn**
 ```bash
-# Ingesta de datos (ejecutar una vez)
-python -m src.ingestion.pipeline
-
-# Generar embeddings
-python -m src.embeddings.vectorizer
-
-# Iniciar API
-python -m src.api.main
+python -m uvicorn src.api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+
+**Opción B: Script Windows (recomendado)**
+```bash
+.\start_server.bat
+```
+
+Swagger UI: http://localhost:8000/docs
+
+## 🔌 API Endpoints
+
+### `POST /chat` - Consultar chatbot
+```json
+Request:
+{
+  "query": "Dame juegos indie",
+  "session_id": "opcional",
+  "filters": {"optional": "filters"}
+}
+
+Response:
+{
+  "response": "Encontré 5 juegos para 'género Indie': Palworld, Balatro, Stardew Valley, Hollow Knight, Valheim.",
+  "session_id": "abc123",
+  "retrieved_games": [
+    {
+      "name": "Palworld",
+      "genres": ["Indie", "Acción"],
+      "price": 29.99,
+      "description": "..."
+    }
+  ],
+  "message_count": 1,
+  "timestamp": "2026-02-04T..."
+}
+```
+
+### `GET /chat/history/{session_id}` - Ver conversación
+```bash
+GET /chat/history/abc123
+Response: {"session_id": "abc123", "messages": [...], "message_count": 5}
+```
+
+### `POST /chat/reset?session_id=abc123` - Limpiar historial
+```bash
+POST /chat/reset?session_id=abc123
+Response: {"message": "Conversación reseteada", "session_id": "abc123"}
+```
+
+### `GET /chat/stats/{session_id}` - Estadísticas sesión
+```bash
+GET /chat/stats/abc123
+Response: {"session_id": "abc123", "created_at": "...", "message_count": 5}
+```
+
+## 📚 Ejemplos de Uso
+
+### Búsqueda por Género
+```bash
+POST /chat
+{"query": "Juegos de estrategia"}
+
+→ "Encontré 5 juegos para 'género Estrategia': Balatro, Dota 2, 7 Days to Die, ..."
+```
+
+### Búsqueda por Nombre
+```bash
+POST /chat
+{"query": "Elden Ring"}
+
+→ "Encontré 'ELDEN RING'! cuesta 46.38€ en retail y 29.22€ en keyshops. Es un juego de Acción, Rol (Metacritic: 94)."
+```
+
+### Multiidioma
+```bash
+POST /chat
+{"query": "RPG games"}
+→ Detecta "RPG" = Rol, busca en género Rol
+
+POST /chat
+{"query": "free to play"}
+→ Detecta "free to play", busca en género Free to Play
+```
+
+## 🎮 Géneros Soportados (12)
+
+| Género | Keywords |
+|--------|----------|
+| **Rol** | rol, rpg |
+| **Acción** | acción, action, accion |
+| **Aventura** | aventura, adventure |
+| **Estrategia** | estrategia, strategy |
+| **Simuladores** | simuladores, simulator, simulador, simulation |
+| **Deportes** | deportes, sports, sport, deporte |
+| **Carreras** | carreras, racing, race |
+| **Casual** | casual |
+| **Indie** | indie |
+| **Multijugador** | multijugador, multiplayer, mmorpg |
+| **Acceso Anticipado** | acceso anticipado, early access, beta |
+| **Free to Play** | free to play, f2p, gratis, gratuito |
+
+## ✅ Restricciones & Mejores Prácticas
+
+**Implementadas**:
+- ✅ Solo retorna datos de BD (sin alucinaciones)
+- ✅ Regex case-insensitive para búsquedas flexibles
+- ✅ Validación de sesiones con timeout
+- ✅ Logging detallado de acciones
+- ✅ CORS configurado
+- ✅ Manejo robusto de excepciones
+
+**Próximas Fases**:
+- ⏳ Validación de precios en tiempo real
+- ⏳ Búsqueda semántica (embeddings + FAISS)
+- ⏳ Explicaciones detalladas (LLM)
+- ⏳ Autenticación de usuarios
+- ⏳ Wishlists y favoritos
+
+## 🧪 Testing
+
+Scripts de testing disponibles:
+
+**Tests de API (tests/)**:
+```bash
+cd tests
+python test_all_genres.py   # Validar 12/12 géneros soportados
+python test_direct_games.py # Validar búsqueda por nombre
+```
+
+**Tests Administrativos (../scripts/)**:
+```bash
+cd ../scripts
+python verify_db.py         # Verificar MongoDB conectado
+python test_server.py       # Quick health check del servidor
+python test_search_service.py # Test unitario GameSearchService
+```
+
+## 📖 Documentación
+
+- [FOLDER_STRUCTURE.md](../FOLDER_STRUCTURE.md) - Estructura completa del proyecto
+- [API_TESTS.md](../docs/API_TESTS.md) - Ejemplos de requests
+- [SETUP_MONGODB.md](../docs/SETUP_MONGODB.md) - Docker instructions
+
+## 📝 Notas
+
+- **Sin web scraping**: APIs HTTP directas (Steam, GG.deals)
+- **Educativo**: Proyecto para aprendizaje con datos reales pero limitados
+- **Modular**: Cada componente testeable independientemente
+- **Open source friendly**: Fácil extensión con nuevas fuentes

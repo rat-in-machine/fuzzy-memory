@@ -3,42 +3,67 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    """Configuración global del chatbot RAG"""
+    """
+    Configuración global del chatbot RAG.
     
-    # OpenAI
-    openai_api_key: str
-    openai_model: str = "gpt-4-turbo-preview"
-    openai_embedding_model: str = "text-embedding-3-small"
+    Carga todas las configuraciones desde variables de entorno (.env).
+    Centraliza la gestión de parámetros para API, base de datos, LLM, etc.
     
-    # APIs Externas
-    steam_api_key: Optional[str] = None
-    ggdeals_api_key: Optional[str] = None
+    Uso:
+        >>> from config.settings import settings
+        >>> print(settings.api_port)  # 8000
+    """
     
-    # MongoDB
-    mongodb_uri: str = "mongodb://localhost:27017"
-    mongodb_db_name: str = "videogames_recommender"
+    # ========================================================================
+    # CONFIGURACIÓN DE OPENAI (APIs de LLM y Embeddings)
+    # ========================================================================
+    openai_api_key: Optional[str] = None  # Clave API de OpenAI
+    openai_model: str = "gpt-4-turbo-preview"  # Modelo LLM para generación de respuestas
+    openai_embedding_model: str = "text-embedding-3-small"  # Modelo para vectorización
     
-    # Vector Store
-    vector_store_type: str = "faiss"
-    vector_store_path: str = "./data/vector_store"
+    # ========================================================================
+    # CONFIGURACIÓN DE APIs EXTERNAS
+    # ========================================================================
+    steam_api_key: Optional[str] = None  # Clave para Steam Web API
+    ggdeals_api_key: Optional[str] = None  # Clave para GG.deals API (precios EUR)
     
-    # API
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    api_reload: bool = True
+    # ========================================================================
+    # CONFIGURACIÓN DE MONGODB
+    # ========================================================================
+    mongodb_uri: str = "mongodb://localhost:27017"  # URI de conexión
+    mongodb_db_name: str = "videogames_recommender"  # Nombre de la base de datos
     
-    # RAG Configuration
-    top_k_results: int = 5
-    max_tokens: int = 1000
-    temperature: float = 0.7
+    # ========================================================================
+    # CONFIGURACIÓN DE VECTOR STORE (RAG)
+    # ========================================================================
+    vector_store_type: str = "faiss"  # Tipo: FAISS o ChromaDB
+    vector_store_path: str = "./data/vector_store"  # Ruta de índices FAISS
     
-    # Logging
-    log_level: str = "INFO"
+    # ========================================================================
+    # CONFIGURACIÓN DE API REST
+    # ========================================================================
+    api_host: str = "0.0.0.0"  # Interfaz de escucha (0.0.0.0 = todas)
+    api_port: int = 8000  # Puerto de escucha
+    api_reload: bool = True  # Recargar servidor en cambios (desarrollo)
+    
+    # ========================================================================
+    # CONFIGURACIÓN DE RAG
+    # ========================================================================
+    top_k_results: int = 5  # Número de juegos a devolver en búsqueda
+    max_tokens: int = 1000  # Tokens máximos en respuesta LLM
+    temperature: float = 0.7  # Creatividad del LLM (0-1): 0=determinista, 1=creativo
+    
+    # ========================================================================
+    # CONFIGURACIÓN DE LOGGING
+    # ========================================================================
+    log_level: str = "INFO"  # Nivel de logging: DEBUG, INFO, WARNING, ERROR, CRITICAL
     
     class Config:
-        env_file = ".env"
-        case_sensitive = False
+        """Configuración de Pydantic para cargar desde .env"""
+        env_file = ".env"  # Archivo de configuración
+        case_sensitive = False  # Variables de entorno case-insensitive
 
 
 # Instancia global de configuración
+# Se crea una única instancia que se importa en toda la aplicación
 settings = Settings()

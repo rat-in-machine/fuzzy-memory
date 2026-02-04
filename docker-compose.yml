@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: gamebot-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: videogames_recommender
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - gamebot-network
+
+  # Opcional: Mongo Express (GUI web)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: gamebot-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      - mongodb
+    networks:
+      - gamebot-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  gamebot-network:
+    driver: bridge
