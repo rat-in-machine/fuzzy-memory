@@ -12,7 +12,7 @@ import json
 import requests
 import codecs
 import logging
-from typing import AsyncGenerator, Optional
+from typing import Generator, Optional, AsyncGenerator
 from uuid import uuid4
 from config.settings import settings
 
@@ -91,7 +91,7 @@ class LLMStreamingClient:
         language: str = "es",
         system_prompt: Optional[str] = None,
         max_retries: int = 3
-    ) -> AsyncGenerator[str, None]:
+    ) -> Generator[str, None, None]:
         """
         Realiza streaming de respuesta del LLM.
         

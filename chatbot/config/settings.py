@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field, AliasChoices
 from typing import Optional
 
 
@@ -17,10 +18,19 @@ class Settings(BaseSettings):
     # ========================================================================
     # CONFIGURACIÓN DE LLM CON STREAMING (CodingBuddy - OpenAI Compatible)
     # ========================================================================
-    llm_api_endpoint: str = "https://ia-research-dev.codingbuddy-4282826dce7d155229a320302e775459-0000.eu-de.containers.appdomain.cloud/research/llm/stream/openai/clients"  # Endpoint LLM
-    llm_api_key: Optional[str] = None  # Clave API para LLM (X-API-KEY)
+    llm_api_endpoint: str = Field(
+        default="https://ia-research-dev.codingbuddy-4282826dce7d155229a320302e775459-0000.eu-de.containers.appdomain.cloud/research/llm/stream/openai/clients",
+        validation_alias=AliasChoices("LLM_API_ENDPOINT", "API_ENDPOINT")
+    )  # Endpoint LLM
+    llm_api_key: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("LLM_API_KEY", "API_KEY")
+    )  # Clave API para LLM (X-API-KEY)
     llm_model: str = "gpt-4o"  # Modelo LLM: gpt-4o, gpt-4-turbo, etc.
-    llm_user_email: str = "ismael@research.com"  # Usuario registrado en CodingBuddy
+    llm_user_email: str = Field(
+        default="ismael@research.com",
+        validation_alias=AliasChoices("LLM_USER_EMAIL", "USER_EMAIL")
+    )  # Usuario registrado en CodingBuddy
     llm_streaming_enabled: bool = True  # Habilitar streaming de respuestas
     llm_max_tokens: int = 1500  # Tokens máximos por respuesta
     llm_temperature: float = 0.7  # Temperatura: 0=determinista, 1=creativo
@@ -71,7 +81,7 @@ class Settings(BaseSettings):
     
     class Config:
         """Configuración de Pydantic para cargar desde .env"""
-        env_file = ".env"  # Archivo de configuración
+        env_file = "../.env"  # Archivo de configuración en la raíz del workspace
         case_sensitive = False  # Variables de entorno case-insensitive
 
 
