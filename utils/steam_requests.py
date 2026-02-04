@@ -68,10 +68,10 @@ class SteamAPI:
         price_overview = None
         if "price_overview" in data:
             price_overview = PriceOverview(
-                currency=data["price_overview"]["currency"],
-                initial=data["price_overview"]["initial"],
-                final=data["price_overview"]["final"],
-                discount_percent=data["price_overview"]["discount_percent"],
+                currency=data["price_overview"]["currency"],                    # Divisa.
+                initial=data["price_overview"]["initial_formatted"],                      # Precio original.
+                final=data["price_overview"]["final_formatted"],                          # Precio con descuento aplicado.
+                discount_percent=data["price_overview"]["discount_percent"],    # Procentaje de descuento.
             )
 
         # Información de plataformas.
@@ -88,15 +88,15 @@ class SteamAPI:
         ]
 
         return SteamGame(
-            appid=data["steam_appid"],                # Id
-            name=data["name"],                        # Nombre del videojuego.
-            short_description=data.get("short_description", ""),
-            developers=data.get("developers", []),
-            publishers=data.get("publishers", []),
-            price_overview=price_overview,
-            platforms=platforms,
-            genres=genres,
-            is_free=data.get("is_free", False),
+            appid=data["steam_appid"],                                  # Id
+            name=data["name"],                                          # Nombre del videojuego.
+            short_description=data.get("short_description", ""),        # Descripción corta.
+            developers=data.get("developers", []),                      # Desarrolladores.
+            publishers=data.get("publishers", []),                      # Distribuidores.
+            price_overview=price_overview,                              # Información del precio.
+            platforms=platforms,                                        # Plataformas.
+            genres=genres,                                              # Géneros del software.
+            is_free=data.get("is_free", False),                         # ¿Es gratuito?
         )
 
     def search_game_by_name(self, name: str, limit: int = 5) -> List[SteamGame]:

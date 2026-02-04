@@ -8,8 +8,8 @@ class PriceOverview:
     """
     
     currency: str           # Divisa.
-    initial: int            # Precio 
-    final: int              # Precio final del juego.
+    initial: float          # Precio 
+    final: float            # Precio final del juego.
     discount_percent: int   # Porcentaje de descuento.
 
 @dataclass

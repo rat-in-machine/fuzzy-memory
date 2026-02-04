@@ -8,7 +8,7 @@ def main():
     load_dotenv()
 
     steam = SteamAPI()
-    results = steam.search_game_by_name("Dota 2", limit=3)
+    results = steam.search_game_by_name("GUILTY GEAR", limit=3)
 
     for game in results:
         print(game.name, game.appid, game.price_overview if game.price_overview is not None else "Free!")
