@@ -1,6 +1,6 @@
 import requests
 from typing import Optional
-from structures.game import SteamGame, PriceOverview, Genre, Platforms
+from structures.steam_game import SteamGame, PriceOverview, Genre, Platforms
 
 
 class SteamAPI:
