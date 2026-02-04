@@ -6,10 +6,10 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 
 load_dotenv()
 
-OPENAI_API= os.getenv("OPENAI_API")
+OPENAI_API= os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL= os.getenv("OPENAI_MODELO")
 
-NEXTAI_API= os.getenv("NEXTAI_API")
+NEXTAI_API= os.getenv("NEXTAI_API_KEY")
 NEXTAI_USER= os.getenv("NEXTAI_USER")
 NEXTAI_URL = os.getenv("NEXTAI_URL")
 NEXTAI_MODEL = os.getenv("NEXTAI_MODELO")

@@ -27,7 +27,7 @@ def llamar_llm_openai(prompt_usuario: str, prompt_sistema:Optional[str] = None, 
     
     messages.append(HumanMessage(content=prompt_usuario))
 
-    config = RunnableConfig
+    config = {}
 
     if id_chat:
         config["configurable"] = {
