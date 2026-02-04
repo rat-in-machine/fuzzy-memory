@@ -7,18 +7,11 @@ import os
 def main():
     load_dotenv()
 
-    API_KEY = os.getenv('API_KEY')      # OBTIENE DESDE .ENV LA API_KEY
+    steam = SteamAPI()
+    results = steam.search_game_by_name("Dota 2", limit=3)
 
-    print(API_KEY)
-    gg = GGDealsPricesAPI(str(API_KEY))
-    
-    prices_dict = gg.get_prices_by_appids([570, 440], region="es")
-    
-    for appid, game in prices_dict.items():
-        if game is None:
-            print(f"{appid} no tiene datos en GG.deals")
-        else:
-            print(f"{appid}: {game.title} - {game.prices.currentKeyshops} {game.prices.currency}")
+    for game in results:
+        print(game.name, game.appid, game.price_overview if game.price_overview is not None else "Free!")
 
     # def main():
     #     steam = SteamAPI()

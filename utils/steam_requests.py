@@ -1,5 +1,5 @@
 import requests
-from typing import Optional
+from typing import Optional, List
 from structures.steam_game import SteamGame, PriceOverview, Genre, Platforms
 
 
@@ -9,6 +9,8 @@ class SteamAPI:
     """
 
     APP_DETAILS_URL = "https://store.steampowered.com/api/appdetails"  # URL de detalles de un videojuego.
+    STORE_SEARCH_URL = "https://store.steampowered.com/api/storesearch" # URL de búsqueda de juegos.
+
 
     def __init__(self, api_key: Optional[str] = None, timeout: int = 10):
         """
@@ -96,3 +98,28 @@ class SteamAPI:
             genres=genres,
             is_free=data.get("is_free", False),
         )
+
+    def search_game_by_name(self, name: str, limit: int = 5) -> List[SteamGame]:
+        """
+        Busca un juego por su nombre y devuelve objetos SteamGame.
+        """
+        if not name.strip():
+            raise ValueError("El nombre del juego no puede estar vacío")
+
+        params = {"term": name, "l": "spanish", "cc": "ES"}
+        response = self.session.get(self.STORE_SEARCH_URL, params=params, timeout=self.timeout)
+        response.raise_for_status()
+        data = response.json()
+
+        items = data.get("items", [])[:limit]
+        games: List[SteamGame] = []
+
+        for item in items:
+            try:
+                game = self.get_game_by_appid(item["id"])
+                games.append(game)
+            except Exception as e:
+                # Ignora juegos que no se pueden cargar
+                print(f"No se pudo cargar {item.get('name')}: {e}")
+
+        return games
