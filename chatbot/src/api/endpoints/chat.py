@@ -1,10 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 from datetime import datetime
-import asyncio
 import json
 import logging
-from config.settings import settings
 from ..core import ChatRequest, ChatResponse, SessionStatsResponse
 from ..session_manager import SessionManager
 from src.services.game_search import get_game_search
@@ -94,105 +91,8 @@ async def chat(request: ChatRequest):
     )
 
 
-@router.post("/chat/stream", tags=["Chat"])
-async def chat_stream(request: ChatRequest):
-    """
-    💬 **CHAT CON STREAMING LLM EN VIVO**
-    """
-    from src.llm.client import LLMStreamingClient
-    from src.llm.prompts import get_system_prompt, PromptMode
-
-    async def generate_stream():
-        try:
-            logger.info(f"Chat Stream - Consulta: '{request.query}'")
-
-            session_id = request.session_id or session_manager.create_session()
-            session = session_manager.get_session(session_id)
-            if session is None:
-                session_id = session_manager.create_session(session_id)
-
-            session_manager.add_message(
-                session_id=session_id,
-                role="user",
-                content=request.query
-            )
-
-            game_search = get_game_search()
-            query_lower = request.query.lower()
-
-            found_genre = None
-            for keyword, genre_name in genre_mapping.items():
-                if keyword in query_lower:
-                    found_genre = genre_name
-                    break
-
-            if found_genre:
-                games = game_search.search_by_genre(found_genre, limit=5)
-            else:
-                words = request.query.split()
-                search_terms = []
-                skip_words = {"de", "del", "el", "la", "los", "las", "un", "una", 
-                            "precio", "cuánto", "cuesta", "vale", "cuál", "es", "qué"}
-                for word in words:
-                    if word.lower() not in skip_words and len(word) > 2:
-                        search_terms.append(word)
-                search_query = " ".join(search_terms[:2]) if search_terms else request.query
-                games = game_search.search_by_name(search_query, limit=5)
-
-            context_games = []
-            for game in games:
-                game_info = f"- {game.get('name')} (Géneros: {', '.join(game.get('genres', []))})"
-                retail = game.get("current_price_retail")
-                if retail == 0:
-                    game_info += " [FREE-TO-PLAY]"
-                elif retail:
-                    game_info += f" - {retail:.2f}€"
-                context_games.append(game_info)
-
-            games_context = "\n".join(context_games) if context_games else "No se encontraron juegos relevantes."
-
-            llm_message = f"""Usuario preguntó: {request.query}
-
-Juegos relevantes de nuestra base de datos:
-{games_context}
-
-Basándote en estos juegos, proporciona una recomendación amigable y entusiasta."""
-
-            llm_client = LLMStreamingClient(
-                api_endpoint=settings.llm_api_endpoint,
-                api_key=settings.llm_api_key,
-                model=settings.llm_model
-            )
-
-            system_prompt = get_system_prompt(PromptMode.RECOMMENDER)
-
-            full_response = ""
-            yield f"data: {json.dumps({'type': 'start', 'games_found': len(games)})}\n\n"
-
-            for chunk in llm_client.stream(
-                message=llm_message,
-                system_prompt=system_prompt,
-                temperature=settings.llm_temperature,
-                language="es"
-            ):
-                full_response += chunk
-                yield f"data: {json.dumps({'type': 'content', 'chunk': chunk})}\n\n"
-                await asyncio.sleep(0.01)
-
-            session_manager.add_message(
-                session_id=session_id,
-                role="assistant",
-                content=full_response
-            )
-
-            yield f"data: {json.dumps({'type': 'done', 'session_id': session_id})}\n\n"
-            logger.info(f"Stream completado - Session: {session_id}")
-
-        except Exception as e:
-            logger.error(f"Error en /chat/stream: {e}", exc_info=True)
-            yield f"data: {json.dumps({'type': 'error', 'error': str(e)})}\n\n"
-
-    return StreamingResponse(generate_stream(), media_type="text/event-stream")
+# ENDPOINT DESHABILITADO: /chat/stream requiere usuario válido registrado en CodingBuddy
+# Descomentar cuando se tenga acceso a credenciales válidas
 
 @router.post("/chat/reset", tags=["Chat"])
 async def reset_chat(session_id: str):
