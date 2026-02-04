@@ -3,33 +3,69 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from milvus.connection import get_milvus
 from utils.config import MODELO_EMBEDDING
 
-def create_chunks(text:str) ->list[str]:
+def create_chunks(text: str) -> list[str]:
     '''
-    Docstring for create_chunks
-    
-    :param text: Description
+    Divide un texto largo en fragmentos (chunks) más pequeños y solapados,
+    adecuados para su posterior vectorización y almacenamiento en una base
+    de datos vectorial.
+
+    El uso de solapamiento permite preservar contexto entre fragmentos
+    consecutivos y mejorar la recuperación semántica en sistemas RAG.
+
+    :param text: Texto completo que se desea dividir en fragmentos.
     :type text: str
-    :return: Description
+    :return: Lista de fragmentos de texto generados a partir del texto original.
     :rtype: list[str]
     '''
-    splitter = RecursiveCharacterTextSplitter(chunk_size=480, chunk_overlap=50)
+
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=480,
+        chunk_overlap=50
+    )
     chunks = splitter.split_text(text=text)
 
     return chunks
 
-def vector_generator(chunks: list[str])-> list[list[float]]:
+
+def vector_generator(chunks: list[str]) -> list[list[float]]:
     '''
-    Docstring for vector_generator
-    
-    :param chunks: Description
+    Genera embeddings vectoriales para una lista de fragmentos de texto
+    utilizando el modelo de embeddings configurado.
+
+    Cada fragmento de texto se transforma en un vector numérico de dimensión
+    fija, adecuado para operaciones de búsqueda semántica en bases de datos
+    vectoriales como Milvus.
+
+    :param chunks: Lista de fragmentos de texto a vectorizar.
     :type chunks: list[str]
+    :return: Lista de vectores numéricos correspondientes a cada fragmento.
+    :rtype: list[list[float]]
     '''
+
     return MODELO_EMBEDDING.embed_documents(chunks)
 
+
 def ingest_db(vectors: list[list[float]],chunks: list[str],collection_name: str = "Pruebas") -> int:
-    """
-    Inserta chunks + embeddings en Milvus usando MilvusClient.
-    """
+    '''
+    Inserta fragmentos de texto y sus embeddings asociados en una colección
+    de Milvus para su posterior recuperación mediante búsqueda vectorial.
+
+    Cada fragmento de texto se almacena junto con su vector correspondiente,
+    manteniendo una relación uno-a-uno entre texto y embedding. La colección
+    debe existir previamente y estar configurada con un campo vectorial
+    compatible con la dimensión de los embeddings generados.
+
+    :param vectors: Lista de embeddings generados a partir de los fragmentos de texto.
+    :type vectors: list[list[float]]
+    :param chunks: Lista de fragmentos de texto originales asociados a los embeddings.
+    :type chunks: list[str]
+    :param collection_name: Nombre de la colección de Milvus donde se insertarán
+                            los datos.
+    :type collection_name: str
+    :return: Número total de registros insertados en la colección.
+    :rtype: int
+    :raises ValueError: Si el número de fragmentos y vectores no coincide.
+    '''
 
     if len(vectors) != len(chunks):
         raise ValueError("Vectors y chunks deben tener la misma longitud")
@@ -41,6 +77,7 @@ def ingest_db(vectors: list[list[float]],chunks: list[str],collection_name: str 
             "text": text,
             "vector": vector
         })
+
     milvus_client = get_milvus()
     milvus_client.insert(
         collection_name=collection_name,
