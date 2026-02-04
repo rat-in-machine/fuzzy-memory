@@ -4,7 +4,7 @@ import uuid
 import requests
 
 
-def definir_payload(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =None)-> dict[str] :
+def define_payload(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =None)-> dict[str] :
     '''
     Método para la defición de la carga que le pasamos a la petición de NextAI con las credenciales y parámetros de la petición
     
@@ -39,14 +39,14 @@ def definir_payload(prompt_usuario: str, prompt_sistema:str = None, id_chat: str
     return data, headers
 
 
-def generar_uuid()-> str:
+def generate_uuid()-> str:
     '''
-    Docstring for generar_uuid
+    Genera automáticamente un uuid.
     '''
 
     return str(uuid.uuid4())
 
-def llamada_llm(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =None)->dict:
+def llm_call(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =None)->dict:
     '''
     Método de llamada de LLM para poder usar los modelos de NextAI
     
@@ -58,7 +58,7 @@ def llamada_llm(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =No
     :type id_chat: str
     '''
 
-    data, headers = definir_payload(prompt_usuario=prompt_usuario, prompt_sistema=prompt_sistema, id_chat=id_chat)
+    data, headers = define_payload(prompt_usuario=prompt_usuario, prompt_sistema=prompt_sistema, id_chat=id_chat)
     try:
         with requests.post(NEXTAI_URL, json=data, headers=headers, stream=True) as response:
             response.raise_for_status() 

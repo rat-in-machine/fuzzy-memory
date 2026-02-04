@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
+from langchain_openai.embeddings import OpenAIEmbeddings
 
 load_dotenv()
 
@@ -13,4 +14,9 @@ NEXTAI_USER= os.getenv("NEXTAI_USER")
 NEXTAI_URL = os.getenv("NEXTAI_URL")
 NEXTAI_MODEL = os.getenv("NEXTAI_MODELO")
 
-MILVUS_CONNECTION =os.getenv("ZILLIZ_MILVUS_URL")
+MILVUS_CONNECTION =os.getenv("ZILLIZ_MILVUS_URI")
+MILVUS_USER= os.getenv("ZILLIZ_MILVUS_USER")
+MILVUS_PASSWORD= os.getenv("ZILLIZ_MILVUS_PASSWORD")
+MILVUS_API= os.getenv("ZILLIZ_MILVUS_API_KEY")
+
+MODELO_EMBEDDING = OpenAIEmbeddings(model=os.getenv("EMBEDDING_MODELO"))
