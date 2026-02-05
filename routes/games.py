@@ -1,13 +1,12 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from dataclasses import asdict
-import sqlite3
 
 from structures.gg_deal_game import GGDealGame
 from utils.gg_deals_requests import GGDealsPricesAPI
 
 from typing import List, Dict, Optional, cast
-from structures.dao.game_dao import GameDAO  # Tu DAO ya hecho
+from structures.dao.game_dao import GameDAO 
 
 router = APIRouter()
 game_dao: GameDAO = cast(GameDAO, None)
@@ -35,6 +34,13 @@ class GameResponse(BaseModel):
 
 @router.post("/", response_model=GameResponse)
 def create_game(game: GameCreate):
+    """
+    Almacena un juego dentro de la base de datos.
+    
+    :param game: Información del videojuego a agregar.
+    :type game: GameCreate
+    """
+    
     existing = game_dao.get(game.appid)
     if existing:
         raise HTTPException(status_code=400, detail="Game already exists")
@@ -51,6 +57,7 @@ def create_game(game: GameCreate):
         mac=game.mac,
         linux=game.linux
     )
+    
     return GameResponse(
         appid=game.appid,
         name=game.name,
@@ -60,6 +67,10 @@ def create_game(game: GameCreate):
 
 @router.get("/", response_model=List[GameResponse])
 def list_games():
+    """
+    Lista los videojuegos de la base de datos.
+    """
+    
     rows = game_dao.list_all()
     return [
         GameResponse(
@@ -75,6 +86,15 @@ def list_games():
 def get_historical_lows(
     appids: List[int] = Query(..., description="Lista de Steam AppIDs (máx 100)")
 ) -> Dict[int, GGDealGame]:
+    """
+    Obtiene el mínimo historico de 1 o más juegos. 
+    
+    :param appids: appID del videojuego a consultar.
+    :type appids: List[int]
+    :return: Lista de videojuegos y precio mínimo histórico.
+    :rtype: Dict[int, GGDealGame]
+    """
+    
     if not appids:
         raise HTTPException(status_code=400, detail="AppIDs list cannot be empty")
 
