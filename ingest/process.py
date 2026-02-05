@@ -1,7 +1,7 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import Union, List, Dict
 
-from llm.OpenAI.prompts import convert_json_to_text
+from llm.prompts import convert_json_to_text
 
 # from llm.openai.llm import llamar_llm_openai
 from llm.NextAI.llm import llm_call

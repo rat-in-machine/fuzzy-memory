@@ -6,7 +6,7 @@ from milvus.services import hybrid_search, build_context
 # from llm.openai.llm import llamar_llm_openai
 from llm.NextAI.llm import llm_call
 
-from llm.OpenAI.prompts import rag_system_prompt, generate_multi_queries_prompt
+from llm.prompts import rag_system_prompt, generate_multi_queries_prompt
 
 
 def generate_multiquery(pregunta: str, n: int = 3) -> list[str]:
