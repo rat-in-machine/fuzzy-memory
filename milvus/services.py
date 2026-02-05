@@ -1,6 +1,7 @@
 from milvus.connection import get_milvus
+from utils.config import MILVUS_COLLECTION_NAME
 
-def search_dense(query_vector: list[float],collection_name: str = "Pruebas",top_k: int = 5) -> list[str]:
+def search_dense(query_vector: list[float],collection_name: str = MILVUS_COLLECTION_NAME,top_k: int = 5) -> list[str]:
 
     '''
     Realiza una búsqueda vectorial semántica (dense search) en una colección
@@ -45,7 +46,7 @@ def search_dense(query_vector: list[float],collection_name: str = "Pruebas",top_
     ]
 
 
-def search_lexical(query: str,collection_name: str = "Pruebas",top_k: int = 5) -> list[str]:
+def search_lexical(query: str,collection_name: str = MILVUS_COLLECTION_NAME,top_k: int = 5) -> list[str]:
     '''
     Realiza una búsqueda léxica basada en coincidencia de texto dentro de una
     colección de Milvus.
@@ -86,7 +87,7 @@ def search_lexical(query: str,collection_name: str = "Pruebas",top_k: int = 5) -
     return [r["text"] for r in results if r.get("text")]
 
 
-def hybrid_search(query: str,query_vector: list[float],collection_name: str = "Pruebas",top_k: int = 5) -> list[str]:
+def hybrid_search(query: str,query_vector: list[float],collection_name: str = MILVUS_COLLECTION_NAME,top_k: int = 5) -> list[str]:
     
     '''
     Ejecuta una búsqueda híbrida combinando búsqueda semántica (dense) y

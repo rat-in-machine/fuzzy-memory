@@ -8,7 +8,7 @@ from llm.NextAI.llm import llm_call
 
 
 from milvus.connection import get_milvus
-from utils.config import MODELO_EMBEDDING
+from utils.config import MODELO_EMBEDDING, MILVUS_COLLECTION_NAME
 
 def generate_text_from_json(json_package: Union[Dict, List[Dict]]) -> str:
     """
@@ -106,7 +106,7 @@ def vector_generator(chunks: list[str]) -> list[list[float]]:
         print("ERROR CREANDO LOS VECTORES: ", e)
 
 
-def ingest_db(vectors: list[list[float]],chunks: list[str],collection_name: str = "Pruebas") -> int:
+def ingest_db(vectors: list[list[float]],chunks: list[str],collection_name: str = MILVUS_COLLECTION_NAME) -> int:
     '''
     Inserta fragmentos de texto y sus embeddings asociados en una colección
     de Milvus para su posterior recuperación mediante búsqueda vectorial.
