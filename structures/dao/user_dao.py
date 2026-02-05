@@ -17,8 +17,8 @@ class UserDAO:
         cursor = self.db.execute(
             """
             INSERT INTO [User] (name, password, email, role_id)
-            VALUES (?, ?, ?, ?);
-            SELECT CAST(SCOPE_IDENTITY() AS INT) AS id;
+            OUTPUT INSERTED.id
+            VALUES (?, ?, ?, ?)
             """,
             (name, password, email, role_id)
         )
@@ -42,7 +42,7 @@ class UserDAO:
         Obtiene un usuario junto con los datos de su rol y permisos.
         """
         return self.db.fetchone("""
-            SELECT u.*, r.name AS role_name, r.can_query, r.can_insert, r.can_update, r.can_delete
+            SELECT u.id, u.name, u.password, u.email, r.name AS role_name, r.id, r.can_query, r.can_insert, r.can_update, r.can_delete
             FROM [User] u
             JOIN Role r ON u.role_id = r.id
             WHERE u.id = ?

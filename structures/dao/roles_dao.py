@@ -13,21 +13,25 @@ class RoleDAO:
         """
         self.db = db
 
-    def create(self, name: str, can_select: int = 0, can_insert: int = 0,
-               can_update: int = 0, can_delete: int = 0) -> int:
-        """
-        Crea un nuevo rol y devuelve su ID.
-        """
+    def create(
+        self,
+        name: str,
+        can_select: int = 0,
+        can_insert: int = 0,
+        can_update: int = 0,
+        can_delete: int = 0
+    ) -> int:
         cursor = self.db.execute(
             """
             INSERT INTO Role (name, can_query, can_insert, can_update, can_delete)
-            VALUES (?, ?, ?, ?, ?);
-            SELECT CAST(SCOPE_IDENTITY() AS INT) AS id;
+            OUTPUT INSERTED.id
+            VALUES (?, ?, ?, ?, ?)
             """,
             (name, can_select, can_insert, can_update, can_delete)
         )
+
         row = cursor.fetchone()
-        return row.id if row else -1
+        return int(row[0]) if row else -1
 
     def get(self, role_id: int) -> Optional[pyodbc.Row]:
         """

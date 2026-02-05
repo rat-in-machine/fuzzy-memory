@@ -46,10 +46,10 @@ def get_user(user_id: int):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return UserResponse(
-        id=row["id"],
-        name=row["name"],
-        email=row["email"],
-        role_id=row["role_id"]
+        id=row[0],
+        name=row[1],
+        email=row[3],
+        role_id=row[4]
     )
 
 
@@ -61,8 +61,8 @@ def list_users():
         UserResponse(
             id=int(row[0]),
             name=row[1],
-            email=row[2],
-            role_id=int(row[3])
+            email=row[3],
+            role_id=int(row[4])
         )
         for row in rows
     ]
@@ -76,16 +76,17 @@ def get_user_with_role(user_id: int):
     user = {
         "id": row[0],
         "name": row[1],
-        "email": row[2],
-        "role_id": row[3]
+        "email": row[3],
+        "role_id": row[5]   # aquí es el id del rol
     }
 
     role = {
         "name": row[4],
-        "can_query": row[5],
-        "can_insert": row[6],
-        "can_update": row[7],
-        "can_delete": row[8]
+        "can_query": row[6],
+        "can_insert": row[7],
+        "can_update": row[8],
+        "can_delete": row[9]
     }
 
     return {"user": user, "role": role}
+

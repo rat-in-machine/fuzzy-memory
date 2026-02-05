@@ -34,7 +34,7 @@ class WishlistDAO:
         """
         return self.db.fetchall(
             """
-            SELECT w.*, g.name AS game_name
+            SELECT w.id, w.user_id, w.appid, g.name AS game_name
             FROM Wishlist w
             JOIN Games g ON w.appid = g.appid
             WHERE w.user_id = ?

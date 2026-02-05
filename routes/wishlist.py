@@ -36,6 +36,6 @@ def get_wishlist(user_id: int):
     """
     rows = wishlist_dao.list_by_user(user_id)
     return [
-        {"appid": row["appid"], "name": row["game_name"]}
+        {"appid": row[2], "name": row[3]}
         for row in rows
     ]
