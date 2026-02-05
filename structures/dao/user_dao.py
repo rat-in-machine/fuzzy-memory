@@ -29,13 +29,13 @@ class UserDAO:
         """
         Obtiene un usuario por su ID.
         """
-        return self.db.fetchone("SELECT * FROM [User] WHERE id = ?", (user_id,))
+        return self.db.fetchone("SELECT id, name, password, email, role_id FROM [User] WHERE id = ?", (user_id,))
 
     def list_all(self) -> List[pyodbc.Row]:
         """
         Lista todos los usuarios.
         """
-        return self.db.fetchall("SELECT * FROM [User]")
+        return self.db.fetchall("SELECT id, name, password, email, role_id FROM [User]")
 
     def get_with_role(self, user_id: int) -> Optional[pyodbc.Row]:
         """

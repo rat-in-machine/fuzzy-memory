@@ -1,64 +1,91 @@
-# routes/user_routes.py
 from fastapi import APIRouter, HTTPException
-from typing import List
-from sql.sqlite import SQLiteDB
+from pydantic import BaseModel
+from typing import List, cast
+
 from structures.dao.user_dao import UserDAO
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-db = SQLiteDB("app.db")
-user_dao = UserDAO(db)
+user_dao: UserDAO = cast(UserDAO, None)
+
+class UserCreate(BaseModel):
+    name: str
+    password: str
+    email: str
+    role_id: int
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role_id: int
+
+class UserWithRoleResponse(BaseModel):
+    user: dict
+    role: dict
 
 @router.post("/", response_model=int)
-def create_user(name: str, password: str, email: str, role_id: int):
-    """
-    Crea un usuario.
-    
-    :param name: Nombre del usuario.
-    :type name: str
-    :param password: Contraseña del usuario.
-    :type password: str
-    :param email: Correo electrónico del usuario.
-    :type email: str
-    :param role_id: Rol del usaurio.
-    :type role_id: int
-    """
-    user_id = user_dao.create(name, password, email, role_id)
+def create_user(user: UserCreate):
+    user_id = user_dao.create(
+        name=user.name,
+        password=user.password,
+        email=user.email,
+        role_id=user.role_id
+    )
+
     if user_id == -1:
         raise HTTPException(status_code=400, detail="No se pudo crear el usuario")
+
     return user_id
 
-@router.get("/{user_id}", response_model=dict)
+
+@router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int):
-    """
-    Busca un usuario a través de su ID.
-    
-    :param user_id: Id asignado al usuario.
-    :type user_id: int
-    """
     row = user_dao.get(user_id)
     if not row:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return dict(row)
 
-@router.get("/", response_model=List[dict])
+    return UserResponse(
+        id=row["id"],
+        name=row["name"],
+        email=row["email"],
+        role_id=row["role_id"]
+    )
+
+
+@router.get("/", response_model=List[UserResponse])
 def list_users():
-    """
-    Lista todos los usuarios.
-    """
-    return [dict(u) for u in user_dao.list_all()]
+    rows = user_dao.list_all()
 
-@router.get("/{user_id}/with_role", response_model=dict)
+    return [
+        UserResponse(
+            id=int(row[0]),
+            name=row[1],
+            email=row[2],
+            role_id=int(row[3])
+        )
+        for row in rows
+    ]
+
+@router.get("/{user_id}/with_role", response_model=UserWithRoleResponse)
 def get_user_with_role(user_id: int):
-    """
-    Busca a un usuario y proporciona información de su rol y permisos.
-    
-    :param user_id: Description
-    :type user_id: int
-    """
     row = user_dao.get_with_role(user_id)
     if not row:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    user = {k: row[k] for k in ["id", "name", "password", "email", "role_id"]}
-    role = {k: row[k] for k in ["role_name", "can_query", "can_insert", "can_update", "can_delete"]}
+
+    user = {
+        "id": row[0],
+        "name": row[1],
+        "email": row[2],
+        "role_id": row[3]
+    }
+
+    role = {
+        "name": row[4],
+        "can_query": row[5],
+        "can_insert": row[6],
+        "can_update": row[7],
+        "can_delete": row[8]
+    }
+
     return {"user": user, "role": role}

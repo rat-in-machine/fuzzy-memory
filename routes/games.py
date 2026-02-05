@@ -72,12 +72,13 @@ def list_games():
     """
     
     rows = game_dao.list_all()
+    
     return [
         GameResponse(
-            appid=row["appid"],
-            name=row["name"],
-            short_description=row["short_description"],
-            is_free=bool(row["is_free"])
+            appid=int(row[0]),
+            name=row[1],
+            short_description=row[2],
+            is_free=bool(row[3])
         ) for row in rows
     ]
     

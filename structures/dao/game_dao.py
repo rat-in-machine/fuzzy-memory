@@ -46,7 +46,7 @@ class GameDAO:
         """
         Lista todos los juegos.
         """
-        return self.db.fetchall("SELECT * FROM Games")
+        return self.db.fetchall("SELECT appid, name, short_description, is_free FROM Games")
 
     def delete(self, appid: int) -> None:
         """

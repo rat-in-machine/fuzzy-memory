@@ -33,10 +33,10 @@ class RoleDAO:
         """
         Obtiene un rol por su ID.
         """
-        return self.db.fetchone("SELECT * FROM Role WHERE id = ?", (role_id,))
+        return self.db.fetchone("SELECT id, name, can_query, can_update, can_delete, can_insert FROM Role WHERE id = ?", (role_id,))
 
     def list_all(self) -> List[pyodbc.Row]:
         """
         Lista todos los roles.
         """
-        return self.db.fetchall("SELECT * FROM Role")
+        return self.db.fetchall("SELECT id, name, can_query, can_update, can_delete, can_insert FROM Role")
