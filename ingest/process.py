@@ -65,8 +65,8 @@ def create_chunks(text: str) -> list[str]:
     '''
 
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=480,
-        chunk_overlap=50
+        chunk_size=750,
+        chunk_overlap=300
     )
     chunks = splitter.split_text(text=text)
 
