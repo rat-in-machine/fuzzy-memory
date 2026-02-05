@@ -23,6 +23,10 @@ class UserResponse(BaseModel):
 class UserWithRoleResponse(BaseModel):
     user: dict
     role: dict
+    
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 @router.post("/", response_model=int)
 def create_user(user: UserCreate):
@@ -90,3 +94,26 @@ def get_user_with_role(user_id: int):
 
     return {"user": user, "role": role}
 
+@router.post("/login")
+def login_user(data: LoginRequest):
+    """
+    Verifica las credenciales del usuario.
+    
+    :param data: Información del usuario.
+    :type data: LoginRequest
+    """
+    
+    user = user_dao.get_by_email(data.email)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+    if user[2] != data.password:
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+    return {
+        "id": user[0],
+        "name": user[1],
+        "email": user[3],
+        "role_id": user[4]
+    }

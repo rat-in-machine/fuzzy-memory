@@ -47,3 +47,9 @@ class UserDAO:
             JOIN Role r ON u.role_id = r.id
             WHERE u.id = ?
         """, (user_id,))
+
+    def get_by_email(self, email: str) -> Optional[pyodbc.Row]:
+        return self.db.fetchone(
+            "SELECT id, name, password, email, role_id FROM [User] WHERE email = ?",
+            (email,)
+        )
