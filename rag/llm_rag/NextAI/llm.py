@@ -57,12 +57,12 @@ def llm_call(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =None)
     :param id_chat: ID del chat
     :type id_chat: str
     '''
-
     data, headers = define_payload(prompt_usuario=prompt_usuario, prompt_sistema=prompt_sistema, id_chat=id_chat)
     try:
         with requests.post(NEXTAI_URL, json=data, headers=headers, stream=True) as response:
             response.raise_for_status() 
-
+    
             return response.json()["content"]
     except requests.exceptions.RequestException as e:
         print("ERROR EN LA SOLICITUD: ", e)
+

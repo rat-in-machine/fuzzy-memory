@@ -1,13 +1,13 @@
 from typing import Optional
 
-from utils.config import MODELO_EMBEDDING, MILVUS_COLLECTION_NAME
-from milvus.services import hybrid_search, build_context
+from utils.config import MODELO_EMBEDDING, MILVUS_COLLECTION_NAME, TOP_K
+from rag.milvus.services import hybrid_search, build_context
 
 
 # from llm.openai.llm import llamar_llm_openai
-from llm_rag.NextAI.llm import llm_call
+from rag.llm_rag.NextAI.llm import llm_call
 
-from llm_rag.prompts import rag_system_prompt, generate_multi_queries_prompt
+from rag.llm_rag.prompts import rag_system_prompt, generate_multi_queries_prompt
 
 
 def generate_multiquery(pregunta: str, n: int = 3) -> list[str]:
@@ -40,7 +40,7 @@ def generate_multiquery(pregunta: str, n: int = 3) -> list[str]:
         
     return [pregunta] + queries
 
-def multi_query_hybrid_search(pregunta: str,collection_name: str = "Pruebas_Juegos_Steam",top_k: int = 5,n_queries: int = 3) -> list[str]:
+def multi_query_hybrid_search(pregunta: str,collection_name: str = "Pruebas_Juegos_Steam",top_k: int = TOP_K,n_queries: int = 3) -> list[str]:
     """
     Ejecuta una búsqueda híbrida utilizando múltiples reformulaciones
     de la consulta original y fusiona los resultados obtenidos.
@@ -87,7 +87,7 @@ def multi_query_hybrid_search(pregunta: str,collection_name: str = "Pruebas_Jueg
 
     return merged
 
-def rag_system_call(pregunta: str,collection_name: str = MILVUS_COLLECTION_NAME,top_k: int = 5,id_chat: Optional[str] = None) -> str:
+def rag_system_call(pregunta: str,collection_name: str = MILVUS_COLLECTION_NAME,top_k: int = TOP_K,id_chat: Optional[str] = None) -> str:
     """
     Orquesta el flujo completo de un sistema RAG (Retrieval-Augmented Generation),
     incorporando expansión de consultas (multi-query), búsqueda híbrida y

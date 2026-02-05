@@ -1,7 +1,8 @@
-from pipeline.rag_pipeline import rag_system_call
-from ingest.process import generate_text_from_json, create_chunks, vector_generator, ingest_db
-from mongo.services import get_games
-from llm_rag.NextAI.llm import llm_call
+from rag.pipeline.rag_pipeline import rag_system_call
+from rag.ingest.process import generate_text_from_json, create_chunks, vector_generator, ingest_db
+from rag.mongo.services import get_games
+from rag.llm_rag.NextAI.llm import llm_call
+from chat.chatbot import build_chatbot_chain
 from utils.config import MILVUS_COLLECTION_NAME
 
 
@@ -28,22 +29,24 @@ def probar_modelo(pregunta: str):
 if __name__ == "__main__":
     engine=True
     print("CONSOLA DE RAG")
-    while engine:
-        seleccion = int(input("indique la opcion a realizar para pruebas de RAG: \n1) Probar modelo.\n2) Preguntar con Rag.\n3) Ingestar datos de prueba en Milvus (NO HACER SI YA HAY DATOS) \n4) Salir.\n>"))
-        match seleccion:
-            case 1:
-                pregunta = str(input("Indique la pregunta para el modelo: \n>"))
-                probar_modelo(pregunta=probar_modelo)
-            case 2:
-                pregunta= str(input("Indique la pregunta a realizar usando los datos de la Milvus:\n>"))
-                preguntar_rag(pregunta=pregunta)
-            case 3:
-                print("Realizando ingesta....")
-                realizar_ingesta()
-                print("Ingesta terminada.")
-            case 4:
-                print("Hasta luego.")
-                exit()
-            case _:
-                print("Lo siento, no es una opción válida. Intente de nuevo.")
-
+    # while engine:
+    #     seleccion = int(input("indique la opcion a realizar para pruebas de RAG: \n1) Probar modelo.\n2) Preguntar con Rag.\n3) Ingestar datos de prueba en Milvus (NO HACER SI YA HAY DATOS) \n4) Salir.\n>"))
+    #     match seleccion:
+    #         case 1:
+    #             pregunta = str(input("Indique la pregunta para el modelo: \n>"))
+    #             probar_modelo(pregunta=probar_modelo)
+    #         case 2:
+    #             pregunta= str(input("Indique la pregunta a realizar usando los datos de la Milvus:\n>"))
+    #             preguntar_rag(pregunta=pregunta)
+    #         case 3:
+    #             print("Realizando ingesta....")
+    #             realizar_ingesta()
+    #             print("Ingesta terminada.")
+    #         case 4:
+    #             print("Hasta luego.")
+    #             exit()
+    #         case _:
+    #             print("Lo siento, no es una opción válida. Intente de nuevo.")
+    chatbot = build_chatbot_chain()
+    respuesta = chatbot.invoke("Dime 3 juegos de accion para jugar este verano")
+    print(respuesta)

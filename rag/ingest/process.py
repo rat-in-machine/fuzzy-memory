@@ -1,13 +1,13 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import Union, List, Dict
 
-from llm_rag.prompts import convert_json_to_text
+from rag.llm_rag.prompts import convert_json_to_text
 
 # from llm.openai.llm import llamar_llm_openai
-from llm_rag.NextAI.llm import llm_call
+from rag.llm_rag.NextAI.llm import llm_call
 
 
-from milvus.connection import get_milvus
+from rag.milvus.connection import get_milvus
 from utils.config import MODELO_EMBEDDING, MILVUS_COLLECTION_NAME
 
 def generate_text_from_json(json_package: Union[Dict, List[Dict]]) -> str:
