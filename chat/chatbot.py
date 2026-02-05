@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from utils.config import OPENAI_API, OPENAI_MODEL
 from langchain_core.output_parsers import StrOutputParser
 from .system_prompts import safety_prompt_template, domain_prompt_template, generic_enrichment_template, chat_prompt_template, rag_enrichment_prompt_template
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from rag.pipeline.rag_pipeline import rag_system_call
 from langchain_core.runnables import (
     RunnablePassthrough,
@@ -96,6 +96,10 @@ def build_chatbot_chain():
         "Esta aplicación solo responde preguntas relacionadas con videojuegos."
     )
 
+    default_flow = lambda x: rag.invoke(
+        enrich.invoke(x["input"])
+    )
+
     return (
         {
             "input": RunnablePassthrough(),
@@ -105,12 +109,38 @@ def build_chatbot_chain():
         | RunnableBranch(
             (lambda x: x["safety"] == "unsafe", unsafe_response),
             (lambda x: x["domain"] == "fuera_de_dominio", out_of_domain_response),
-            # flujo normal
-            (
-                lambda _: True,
-                lambda x: rag.invoke(
-                    enrich.invoke(x["input"])
-                )
-            )
+            default_flow   # 👈 AQUÍ está la clave
         )
     )
+
+# def build_chatbot_chain():
+
+#     safety = safety_chain()
+#     domain = domain_chain()
+#     enrich = enrichment_chain()
+#     chat = chat_chain()
+#     rag = rag_hook()
+
+#     unsafe_response = lambda _: "No puedo ayudarte con ese tipo de contenido."
+#     out_of_domain_response = lambda _: (
+#         "Esta aplicación solo responde preguntas relacionadas con videojuegos."
+#     )
+
+#     return (
+#         {
+#             "input": RunnablePassthrough(),
+#             "safety": safety,
+#             "domain": domain
+#         }
+#         | RunnableBranch(
+#             (lambda x: x["safety"] == "unsafe", unsafe_response),
+#             (lambda x: x["domain"] == "fuera_de_dominio", out_of_domain_response),
+#             # flujo normal
+#             (
+#                 lambda _: True,
+#                 lambda x: rag.invoke(
+#                     enrich.invoke(x["input"])
+#                 )
+#             )
+#         )
+#     )
