@@ -5,8 +5,8 @@ import logging
 from ..core import ChatRequest, ChatResponse, SessionStatsResponse
 from ..session_manager import SessionManager
 from src.services.game_search import get_game_search
-from src.llm.client import LLMStreamingClient
-from src.llm.prompts import SYSTEM_PROMPT_GAMING_EXPERT
+from src.llm_chatbot.client import LLMStreamingClient
+from src.llm_chatbot.prompts import SYSTEM_PROMPT_GAMING_EXPERT
 
 router = APIRouter()
 session_manager = SessionManager(session_timeout_minutes=60)

@@ -1,7 +1,7 @@
 from pipeline.rag_pipeline import rag_system_call
 from ingest.process import generate_text_from_json, create_chunks, vector_generator, ingest_db
 from mongo.services import get_games
-from llm.NextAI.llm import llm_call
+from llm_rag.NextAI.llm import llm_call
 from utils.config import MILVUS_COLLECTION_NAME
 
 
