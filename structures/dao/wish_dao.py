@@ -1,6 +1,6 @@
 from typing import List
 import pyodbc
-from sql.azure_sqldb import AzureSQLDB  # tu clase de conexión a Azure SQL
+from sql.azure_sqldb import AzureSQLDB
 
 class WishlistDAO:
     """
@@ -26,6 +26,24 @@ class WishlistDAO:
         self.db.execute(
             "DELETE FROM Wishlist WHERE user_id = ? AND appid = ?",
             (user_id, appid)
+        )
+
+    def delete_by_id(self, wishlist_id: int) -> None:
+        """
+        Elimina una entrada de wishlist por su ID.
+        """
+        self.db.execute(
+            "DELETE FROM Wishlist WHERE id = ?",
+            (wishlist_id,)
+        )
+
+    def delete_all_by_user(self, user_id: int) -> None:
+        """
+        Elimina toda la wishlist de un usuario.
+        """
+        self.db.execute(
+            "DELETE FROM Wishlist WHERE user_id = ?",
+            (user_id,)
         )
 
     def list_by_user(self, user_id: int) -> List[pyodbc.Row]:

@@ -39,3 +39,16 @@ def get_wishlist(user_id: int):
         {"appid": row[2], "name": row[3]}
         for row in rows
     ]
+
+@router.delete("/{user_id}/{appid}", tags=["wishlist"])
+def delete_wishlist_item(user_id: int, appid: int):
+    """
+    Elimina un juego de la lista de deseados de un usuario.
+    """
+    rows = wishlist_dao.list_by_user(user_id)
+
+    if not any(row[2] == appid for row in rows):
+        raise HTTPException(status_code=404, detail="Item not found in wishlist")
+
+    wishlist_dao.remove(user_id, appid)
+    return {"message": "Removed from wishlist"}
