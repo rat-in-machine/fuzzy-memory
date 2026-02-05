@@ -2,7 +2,10 @@ from typing import Optional
 
 from utils.config import MODELO_EMBEDDING
 from milvus.services import hybrid_search, build_context
-from llm.openai.llm import llamar_llm_openai
+
+# from llm.openai.llm import llamar_llm_openai
+from llm.nextai.llm import llm_call
+
 from llm.openai.prompts import rag_system_prompt, generate_multi_queries_prompt
 
 
@@ -21,7 +24,8 @@ def generate_multiquery(pregunta: str, n: int = 3) -> list[str]:
 
     prompt = generate_multi_queries_prompt(pregunta=pregunta, n=n)
 
-    response = llamar_llm_openai(prompt_usuario=prompt)
+    # response = llamar_llm_openai(prompt_usuario=prompt)
+    response = llm_call(prompt_usuario=prompt)
 
     queries = [q.strip() for q in response.split("\n") if q.strip()]
 
@@ -99,7 +103,13 @@ def rag_system_call(pregunta: str,collection_name: str = "Pruebas",top_k: int = 
     system_prompt = rag_system_prompt(context=context)
 
 
-    return llamar_llm_openai(
+    # return llamar_llm_openai(
+    #     prompt_usuario=pregunta,
+    #     prompt_sistema=system_prompt,
+    #     id_chat=id_chat
+    # )
+
+    return llm_call(
         prompt_usuario=pregunta,
         prompt_sistema=system_prompt,
         id_chat=id_chat

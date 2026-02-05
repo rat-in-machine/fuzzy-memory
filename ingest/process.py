@@ -1,7 +1,53 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from typing import Union, List, Dict
+
+from llm.openai.prompts import convert_json_to_text
+
+# from llm.openai.llm import llamar_llm_openai
+from llm.nextai.llm import llm_call
+
 
 from milvus.connection import get_milvus
 from utils.config import MODELO_EMBEDDING
+
+def generate_text_from_json(json_package: Union[Dict, List[Dict]]) -> str:
+    """
+    Genera un único texto descriptivo a partir de uno o varios documentos
+    JSON de juegos, utilizando un prompt de sistema para transformar cada
+    documento en texto estructurado y profesional.
+
+    El texto resultante es la concatenación de todas las descripciones
+    generadas, y está pensado para ser utilizado posteriormente en procesos
+    de chunking, generación de embeddings o indexación en sistemas RAG.
+
+    :param json_package: Documento JSON de un juego o lista de documentos JSON.
+    :type json_package: dict | list[dict]
+    :return: Texto concatenado con la información descriptiva de todos los juegos.
+    :rtype: str
+    """
+
+    if isinstance(json_package, dict):
+        games = [json_package]
+    else:
+        games = json_package
+
+    texts: list[str] = []
+
+    for game in games:
+        system_prompt = convert_json_to_text(info_juego=game)
+
+        # text = llamar_llm_openai(
+        #     prompt_usuario="Genera el texto descriptivo siguiendo las instrucciones.",
+        #     prompt_sistema=system_prompt
+        # )
+
+        text = llm_call(prompt_usuario="Genera el texto descriptivo siguiendo las instrucciones.", prompt_sistema=system_prompt)
+
+        if text and text.strip():
+            texts.append(text.strip())
+
+    return "\n\n" + ("\n\n" + ("-" * 80) + "\n\n").join(texts)
+
 
 def create_chunks(text: str) -> list[str]:
     '''

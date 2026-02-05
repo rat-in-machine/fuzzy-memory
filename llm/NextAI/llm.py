@@ -20,7 +20,7 @@ def define_payload(prompt_usuario: str, prompt_sistema:str = None, id_chat: str 
 
     data = {
     "model": NEXTAI_MODEL,
-    "uuid": generar_uuid() if id_chat==None else id_chat,
+    "uuid": generate_uuid() if id_chat==None else id_chat,
     "message": {
         "role": "user",
         "content": prompt_usuario
@@ -33,7 +33,7 @@ def define_payload(prompt_usuario: str, prompt_sistema:str = None, id_chat: str 
 
     headers = {
         "Content-Type": "application/json",
-        "X-API-KEY": NEXTAI_API
+        "x-api-key": NEXTAI_API
     }
 
     return data, headers
@@ -63,6 +63,6 @@ def llm_call(prompt_usuario: str, prompt_sistema:str = None, id_chat: str =None)
         with requests.post(NEXTAI_URL, json=data, headers=headers, stream=True) as response:
             response.raise_for_status() 
 
-            return response.json()
+            return response.json()["content"]
     except requests.exceptions.RequestException as e:
         print("ERROR EN LA SOLICITUD: ", e)
