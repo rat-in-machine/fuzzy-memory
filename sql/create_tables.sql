@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS User (
 -- Tabla de juegos
 CREATE TABLE Games (
     id SERIAL PRIMARY KEY,
-    appid INT NOT NULL,
+    appid INT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     short_description TEXT,
     currency CHAR(3),
@@ -41,6 +41,6 @@ CREATE TABLE IF NOT EXISTS Wishlist (
     user_id INTEGER NOT NULL,
     appid INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE,
-    FOREIGN KEY (appid) REFERENCES Game(appid) ON DELETE CASCADE,
+    FOREIGN KEY (appid) REFERENCES Games(appid) ON DELETE CASCADE,
     UNIQUE(user_id, appid)
 );

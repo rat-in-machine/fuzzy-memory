@@ -1,4 +1,4 @@
-import requests
+import requests # type: ignore
 from typing import Optional, List
 from structures.steam_game import SteamGame, PriceOverview, Genre, Platforms
 

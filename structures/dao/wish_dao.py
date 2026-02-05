@@ -24,7 +24,7 @@ class WishlistDAO:
             """
             SELECT w.*, g.name as game_name
             FROM Wishlist w
-            JOIN Game g ON w.appid = g.appid
+            JOIN Games g ON w.appid = g.appid
             WHERE w.user_id = ?
             """,
             (user_id,)

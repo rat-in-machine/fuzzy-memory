@@ -10,7 +10,7 @@ class GamePrices:
     currentKeyshops: Optional[str]      # Precio actual en keyshops, como string
     historicalRetail: Optional[str]     # Precio histórico más bajo en tiendas retail
     historicalKeyshops: Optional[str]   # Precio histórico más bajo en keyshops
-    currency: str                        # Código de moneda usado en todos los precios
+    currency: str                       # Código de moneda usado en todos los precios
 
 @dataclass
 class GGDealGame:

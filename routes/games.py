@@ -1,11 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
+from dataclasses import asdict
+import sqlite3
 
-from typing import List, Optional, cast
+from structures.gg_deal_game import GGDealGame
+from utils.gg_deals_requests import GGDealsPricesAPI
+
+from typing import List, Dict, Optional, cast
 from structures.dao.game_dao import GameDAO  # Tu DAO ya hecho
 
 router = APIRouter()
 game_dao: GameDAO = cast(GameDAO, None)
+
+gg_api = GGDealsPricesAPI(api_key="10u0ii_6ldE5msBBWXNdy6iuLPfAQTEi")
 
 class GameCreate(BaseModel):
     appid: int
@@ -62,3 +69,26 @@ def list_games():
             is_free=bool(row["is_free"])
         ) for row in rows
     ]
+    
+
+@router.get("/historical-lows")
+def get_historical_lows(
+    appids: List[int] = Query(..., description="Lista de Steam AppIDs (máx 100)")
+) -> Dict[int, GGDealGame]:
+    if not appids:
+        raise HTTPException(status_code=400, detail="AppIDs list cannot be empty")
+
+    try:
+        data = gg_api.get_prices_by_appids(appids)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+    result: Dict[int, GGDealGame] = {}
+
+    for appid, game in data.items():
+        if game is None:
+            continue
+
+        result[appid] = game
+
+    return result

@@ -22,8 +22,8 @@ if not os.path.exists(DB_FILE):
         db.executescript(f.read())  # crear tablas si no existe el archivo
     db.close()
 
-db = SQLiteDB(DB_FILE)
-db.connect()  # conexión abierta durante todo el ciclo de vida de la app
+db = SQLiteDB(DB_FILE)          # SQLite.
+db.connect()                    # conexión abierta durante todo el ciclo de vida de la app
 
 game_dao = GameDAO(db)          # DAO de juegos
 wishlist_dao = WishlistDAO(db)  # DAO de wishlist
