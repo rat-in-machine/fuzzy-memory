@@ -18,7 +18,7 @@ def preguntar_rag(pregunta: str, collection: str = "Pruebas_Juegos"):
     print(response)
 
 def probar_modelo(pregunta: str):
-    response = llm_call(prompt_usuario="Esto funciona correctamente? responde solo con si o no")
+    response = llm_call(prompt_usuario=pregunta)
     print(response)
 
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         match seleccion:
             case 1:
                 pregunta = str(input("Indique la pregunta para el modelo: \n>"))
-                probar_modelo(probar_modelo)
+                probar_modelo(pregunta=probar_modelo)
             case 2:
                 pregunta= str(input("Indique la pregunta a realizar usando los datos de la Milvus:\n>"))
                 preguntar_rag(pregunta=pregunta)

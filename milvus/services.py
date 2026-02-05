@@ -22,15 +22,21 @@ def search_dense(query_vector: list[float],collection_name: str = "Pruebas",top_
     :rtype: list[str]
     '''
 
-    milvus_client = get_milvus()
+    try:
+        milvus_client = get_milvus()
+    except Exception as e:
+        print("ERROR AL OBTENER EL CLIENTE DE MILVUS EN LA SEARCH DENSE: ",e)
 
-    results = milvus_client.search(
-        collection_name=collection_name,
-        data=[query_vector],
-        anns_field="vector",
-        limit=top_k,
-        output_fields=["text"]
-    )
+    try:
+        results = milvus_client.search(
+            collection_name=collection_name,
+            data=[query_vector],
+            anns_field="vector",
+            limit=top_k,
+            output_fields=["text"]
+        )
+    except Exception as e:
+        print("ERROR AL OBTENER RESULTADOS DE LA MILVUS: ",e)
 
     return [
         hit["entity"].get("text", "")
@@ -61,16 +67,21 @@ def search_lexical(query: str,collection_name: str = "Pruebas",top_k: int = 5) -
     :rtype: list[str]
     '''
 
-    milvus_client = get_milvus()
+    try:
+        milvus_client = get_milvus()
+    except Exception as e:
+        print("ERROR AL CONECTAR A LA MILVUS EN LA BUSQUEDA LEXICA: ",e)
 
     expr = f'text like "%{query}%"'
-
-    results = milvus_client.query(
-        collection_name,
-        expr,
-        output_fields=["text"],
-        limit=top_k
-    )
+    try:
+        results = milvus_client.query(
+            collection_name,
+            expr,
+            output_fields=["text"],
+            limit=top_k
+        )
+    except Exception as e:
+        print("ERROR AL OBTENER RESULTADOS CON LA BSUQEUDA LEXICA: ",e)
 
     return [r["text"] for r in results if r.get("text")]
 
@@ -98,9 +109,14 @@ def hybrid_search(query: str,query_vector: list[float],collection_name: str = "P
              semántica y léxica, sin duplicados.
     :rtype: list[str]
     '''
-
-    dense_chunks = search_dense(query_vector, collection_name, top_k)
-    lexical_chunks = search_lexical(query, collection_name, top_k)
+    try:
+        dense_chunks = search_dense(query_vector, collection_name, top_k)
+    except Exception as e:
+        print("ERROR AL OBTENER DENSE CHUNKS EN LA BUSQUEDA HIBRIDA: ",e)
+    try:
+        lexical_chunks = search_lexical(query, collection_name, top_k)
+    except Exception as e:
+        print("ERROR AL OBTENER CHUNKS DE LA BUSQUEDA LEXICA: ",e)
 
     seen = set()
     merged = []
@@ -128,6 +144,7 @@ def build_context(chunks: list[str]) -> str:
              de lenguaje.
     :rtype: str
     '''
-
-    return "\n\n".join(f"- {chunk}" for chunk in chunks)
-
+    try:
+        return "\n\n".join(f"- {chunk}" for chunk in chunks)
+    except Exception as e:
+        print("ERROR A LA HORA DE CONSTRUIR EL CONTEXTO: ",e)

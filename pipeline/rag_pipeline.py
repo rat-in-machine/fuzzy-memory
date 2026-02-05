@@ -21,14 +21,22 @@ def generate_multiquery(pregunta: str, n: int = 3) -> list[str]:
     :return: Lista de consultas reformuladas, incluyendo la original.
     :rtype: list[str]
     """
-
-    prompt = generate_multi_queries_prompt(pregunta=pregunta, n=n)
+    try:
+        prompt = generate_multi_queries_prompt(pregunta=pregunta, n=n)
+    except Exception as e:
+        print("ERROR GENERANDO EL PROMPT DE MULTIQUERY: ",e)
 
     # response = llamar_llm_openai(prompt_usuario=prompt)
-    response = llm_call(prompt_usuario=prompt)
+    try:
+        response = llm_call(prompt_usuario=prompt)
+    except Exception as e:
+        print("ERROR LLAMANDO AL MODELO PARA MULTIQUERY: ",e)
 
-    queries = [q.strip() for q in response.split("\n") if q.strip()]
-
+    try:
+        queries = [q.strip() for q in response.split("\n") if q.strip()]
+    except Exception as e:
+        print("ERROR CREANDO LA QUERY DE MULTIQUERY: ",e)
+        
     return [pregunta] + queries
 
 def multi_query_hybrid_search(pregunta: str,collection_name: str = "Pruebas",top_k: int = 5,n_queries: int = 3) -> list[str]:
@@ -47,21 +55,29 @@ def multi_query_hybrid_search(pregunta: str,collection_name: str = "Pruebas",top
     :return: Lista fusionada de fragmentos relevantes sin duplicados.
     :rtype: list[str]
     """
-
-    queries = generate_multiquery(pregunta, n=n_queries)
+    try:
+        queries = generate_multiquery(pregunta, n=n_queries)
+    except Exception as e:
+        print("ERROR BUSCANDO CON HYBRID MULTY QUERY: ",e)
 
     seen = set()
     merged = []
 
     for q in queries:
-        query_vector = MODELO_EMBEDDING.embed_query(q)
+        try:
+            query_vector = MODELO_EMBEDDING.embed_query(q)
+        except Exception as e:
+            continue
 
-        chunks = hybrid_search(
-            query=q,
-            query_vector=query_vector,
-            collection_name=collection_name,
-            top_k=top_k
-        )
+        try:
+            chunks = hybrid_search(
+                query=q,
+                query_vector=query_vector,
+                collection_name=collection_name,
+                top_k=top_k
+            )
+        except Exception as e:
+            continue
 
         for chunk in chunks:
             if chunk not in seen:
@@ -87,19 +103,23 @@ def rag_system_call(pregunta: str,collection_name: str = "Pruebas",top_k: int = 
     :return: Respuesta generada por el modelo de lenguaje.
     :rtype: str
     """
-
-    chunks = multi_query_hybrid_search(
-        pregunta=pregunta,
-        collection_name=collection_name,
-        top_k=top_k * 2,
-        n_queries=3
-    )
+    try:
+        chunks = multi_query_hybrid_search(
+            pregunta=pregunta,
+            collection_name=collection_name,
+            top_k=top_k * 2,
+            n_queries=3
+        )
+    except Exception as e:
+        print("ERROR OBTENIENDO CHUNKS PARA LA LLAMADA CON RAG:", e)
 
     if not chunks:
         return "No tengo información suficiente para responder."
 
-
-    context = build_context(chunks[:top_k])
+    try:
+        context = build_context(chunks[:top_k])
+    except Exception as e:
+        print("ERROR AL OBTENER EL CONTEXTO DE CHUNKS PARA LLAMADA RAG: ",e)
     system_prompt = rag_system_prompt(context=context)
 
 
@@ -108,9 +128,11 @@ def rag_system_call(pregunta: str,collection_name: str = "Pruebas",top_k: int = 
     #     prompt_sistema=system_prompt,
     #     id_chat=id_chat
     # )
-
-    return llm_call(
-        prompt_usuario=pregunta,
-        prompt_sistema=system_prompt,
-        id_chat=id_chat
-    )
+    try:
+        return llm_call(
+            prompt_usuario=pregunta,
+            prompt_sistema=system_prompt,
+            id_chat=id_chat
+        )
+    except Exception as e:
+        print("ERROR AL ELABORAR LA RESPUESTA DEL MODELO CON EL RAG: ",e)

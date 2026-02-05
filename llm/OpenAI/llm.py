@@ -14,16 +14,26 @@ llm = ChatOpenAI(
 
 def llamar_llm_openai(prompt_usuario: str,prompt_sistema: Optional[str] = None,id_chat: Optional[str] = None) -> str:
 
-    messages = []
+    try:
+        messages = []
+    
+        if prompt_sistema:
+            messages.append(SystemMessage(content=prompt_sistema))
 
-    if prompt_sistema:
-        messages.append(SystemMessage(content=prompt_sistema))
-
-    messages.append(HumanMessage(content=prompt_usuario))
+        messages.append(HumanMessage(content=prompt_usuario))
+    except Exception as e:
+        print("ERROR A LA HORA DE CONSTRUIR EL MENSAJES PARA EL MODELO DE LENGUAJE",e)
 
     config = {}
     if id_chat:
         config["configurable"] = {"thread_id": id_chat}
 
-    response = llm.invoke(messages, config=config)
-    return response.content
+    try:
+        response = llm.invoke(messages, config=config)
+    except Exception as e:
+        print("ERROR A LA HORA DE CREAR EL RESPONSE OPENAI: ",e)
+
+    try:
+        return response.content
+    except Exception as e:
+        print("ERROR A LA HORA DE CREAR EL CONTENIDO DE RESPONSE OPENAI: ",e)

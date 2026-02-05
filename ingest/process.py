@@ -26,25 +26,31 @@ def generate_text_from_json(json_package: Union[Dict, List[Dict]]) -> str:
     :rtype: str
     """
 
-    if isinstance(json_package, dict):
-        games = [json_package]
-    else:
-        games = json_package
+    # if isinstance(json_package, dict):
+    #     games = [json_package]
+    # else:
+    #     games = json_package
+    try:
+        if isinstance(json_package, dict):
+            games = [json_package]
+        else:
+            games = json_package
+    except TypeError as e:
+        print("ERROR", e)
 
     texts: list[str] = []
 
     for game in games:
-        system_prompt = convert_json_to_text(info_juego=game)
+        try:
 
-        # text = llamar_llm_openai(
-        #     prompt_usuario="Genera el texto descriptivo siguiendo las instrucciones.",
-        #     prompt_sistema=system_prompt
-        # )
+            system_prompt = convert_json_to_text(info_juego=game)
 
-        text = llm_call(prompt_usuario="Genera el texto descriptivo siguiendo las instrucciones.", prompt_sistema=system_prompt)
+            text = llm_call(prompt_usuario="Genera el texto descriptivo siguiendo las instrucciones.", prompt_sistema=system_prompt)
 
-        if text and text.strip():
-            texts.append(text.strip())
+            if text and text.strip():
+                texts.append(text.strip())
+        except Exception as e:
+            print("ERROR GENERANDO TEXTO DEL JSON: ",e)
 
     return "\n\n" + ("\n\n" + ("-" * 80) + "\n\n").join(texts)
 
@@ -63,14 +69,21 @@ def create_chunks(text: str) -> list[str]:
     :return: Lista de fragmentos de texto generados a partir del texto original.
     :rtype: list[str]
     '''
+    try:
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=750,
+            chunk_overlap=300
+        )
+    except TypeError as e:
+        print("ERROR CREANDO CHUNKS",e)
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=750,
-        chunk_overlap=300
-    )
-    chunks = splitter.split_text(text=text)
+    try:
+        chunks = splitter.split_text(text=text)
+        return chunks
+    except Exception as e:
+        print("ERROR",e)
 
-    return chunks
+    
 
 
 def vector_generator(chunks: list[str]) -> list[list[float]]:
@@ -87,8 +100,10 @@ def vector_generator(chunks: list[str]) -> list[list[float]]:
     :return: Lista de vectores numéricos correspondientes a cada fragmento.
     :rtype: list[list[float]]
     '''
-
-    return MODELO_EMBEDDING.embed_documents(chunks)
+    try:
+        return MODELO_EMBEDDING.embed_documents(chunks)
+    except Exception as e:
+        print("ERROR CREANDO LOS VECTORES: ", e)
 
 
 def ingest_db(vectors: list[list[float]],chunks: list[str],collection_name: str = "Pruebas") -> int:
@@ -124,12 +139,20 @@ def ingest_db(vectors: list[list[float]],chunks: list[str],collection_name: str 
             "vector": vector
         })
 
-    milvus_client = get_milvus()
-    milvus_client.insert(
+    try:
+        milvus_client = get_milvus()
+    except Exception as e:
+        print("ERROR CONECTANDO A LA BASE DE DATOS:", e)
+
+    try:
+        milvus_client.insert(
         collection_name=collection_name,
         data=rows
-    )
+        )
 
-    milvus_client.flush(collection_name)
+        milvus_client.flush(collection_name)
+
+    except Exception as e:
+        print("ERROR INGESTANDO EN LA MILVUS: ",e)
 
     return len(rows)
