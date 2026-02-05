@@ -1,10 +1,10 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import Union, List, Dict
 
-from llm.openai.prompts import convert_json_to_text
+from llm.OpenAI.prompts import convert_json_to_text
 
 # from llm.openai.llm import llamar_llm_openai
-from llm.nextai.llm import llm_call
+from llm.NextAI.llm import llm_call
 
 
 from milvus.connection import get_milvus

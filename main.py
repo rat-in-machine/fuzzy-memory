@@ -1,7 +1,7 @@
 from pipeline.rag_pipeline import rag_system_call
 from ingest.process import generate_text_from_json
 from mongo.services import get_games
-from llm.nextai.llm import llm_call
+from llm.NextAI.llm import llm_call
 
 
 if __name__ == "__main__":
