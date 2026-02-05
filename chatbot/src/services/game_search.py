@@ -7,11 +7,30 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 import logging
+import unicodedata
+import re
 
 logger = logging.getLogger(__name__)
 
 # Cargar configuración desde variables de entorno
 load_dotenv()
+
+def normalize_text(text: str) -> str:
+    """
+    Normaliza texto: quita acentos y convierte a minúsculas.
+    Útil para búsquedas que ignoran acentos y mayúsculas.
+    
+    Args:
+        text: Texto a normalizar
+        
+    Returns:
+        Texto sin acentos y en minúsculas
+    """
+    # Normalizar unicode y quitar acentos
+    nfkd = unicodedata.normalize('NFKD', text)
+    text_without_accents = ''.join([c for c in nfkd if not unicodedata.combining(c)])
+    # Convertir a minúsculas
+    return text_without_accents.lower()
 
 class GameSearchService:
     """
@@ -34,7 +53,7 @@ class GameSearchService:
     
     def search_by_name(self, game_name: str, limit: int = 10) -> List[Dict]:
         """
-        Busca juegos por nombre (busqueda parcial, case-insensitive)
+        Busca juegos por nombre (busqueda parcial, case-insensitive, ignora acentos)
         
         Args:
             game_name: Nombre del juego a buscar
@@ -44,9 +63,15 @@ class GameSearchService:
             Lista de juegos encontrados con sus datos
         """
         try:
-            # Busqueda case-insensitive con regex
-            games = list(self.games_collection.find(
-                {"name": {"$regex": game_name, "$options": "i"}},
+            # Normalizar la búsqueda
+            normalized_search = normalize_text(game_name)
+            # Escapar caracteres especiales de regex
+            escaped_search = re.escape(normalized_search)
+            
+            # Obtener TODOS los juegos y filtrar en Python
+            # (más eficiente que normalizar en cada query de Mongo)
+            all_games = list(self.games_collection.find(
+                {},
                 {
                     "name": 1,
                     "steam_id": 1,
@@ -62,9 +87,15 @@ class GameSearchService:
                     "ggdeals_url": 1,
                     "header_image": 1
                 }
-            ).limit(limit))
+            ))
             
-            return games
+            # Filtrar juegos cuyo nombre normalizado contenga la búsqueda normalizada
+            matching_games = [
+                game for game in all_games 
+                if normalized_search in normalize_text(game.get('name', ''))
+            ]
+            
+            return matching_games[:limit]
             
         except Exception as e:
             logger.error(f"Error buscando juegos por nombre: {e}")
@@ -123,11 +154,14 @@ class GameSearchService:
                 {
                     "name": 1,
                     "steam_id": 1,
+                    "description": 1,
                     "genres": 1,
                     "current_price_retail": 1,
                     "current_price_keyshop": 1,
                     "currency": 1,
-                    "metacritic": 1
+                    "metacritic": 1,
+                    "header_image": 1,
+                    "ggdeals_url": 1
                 }
             ).limit(limit))
             
@@ -136,6 +170,63 @@ class GameSearchService:
         except Exception as e:
             logger.error(f"Error buscando juegos por genero: {e}")
             return []
+    
+    def get_all_games(self, page: int = 1, page_size: int = 25) -> Dict:
+        """
+        Obtiene todos los juegos con paginación
+        
+        Args:
+            page: Número de página (empieza en 1)
+            page_size: Cantidad de juegos por página
+            
+        Returns:
+            Diccionario con 'games' (lista de juegos), 'total' (total de juegos), 
+            'page' (página actual), 'total_pages' (total de páginas)
+        """
+        try:
+            # Calcular offset
+            skip = (page - 1) * page_size
+            
+            # Obtener total de juegos
+            total_games = self.games_collection.count_documents({})
+            
+            # Calcular total de páginas
+            total_pages = (total_games + page_size - 1) // page_size
+            
+            # Obtener juegos de la página actual
+            games = list(self.games_collection.find(
+                {},
+                {
+                    "name": 1,
+                    "steam_id": 1,
+                    "description": 1,
+                    "genres": 1,
+                    "current_price_retail": 1,
+                    "current_price_keyshop": 1,
+                    "currency": 1,
+                    "metacritic": 1,
+                    "header_image": 1,
+                    "ggdeals_url": 1
+                }
+            ).skip(skip).limit(page_size))
+            
+            return {
+                "games": games,
+                "total": total_games,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": total_pages
+            }
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo todos los juegos: {e}")
+            return {
+                "games": [],
+                "total": 0,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": 0
+            }
     
     def format_game_info(self, game: Dict) -> str:
         """

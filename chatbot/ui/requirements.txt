@@ -1,0 +1,13 @@
+# Dependencias para la interfaz Streamlit del chatbot
+
+# UI Framework
+streamlit==1.31.1
+
+# HTTP Client (ya incluido en el proyecto, pero listado explícitamente)
+httpx==0.26.0
+
+# Additional UI enhancements
+streamlit-option-menu==0.3.6
+
+# Para mejor experience en desarrollo
+python-dotenv==1.0.1

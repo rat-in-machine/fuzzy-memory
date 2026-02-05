@@ -35,7 +35,7 @@ class LLMStreamingClient:
         self,
         api_endpoint: str = None,
         api_key: str = None,
-        model: str = "gpt-4o",
+        model: str = "gpt-5",
         user_email: str = None,
         timeout: int = 60
     ):
@@ -43,9 +43,10 @@ class LLMStreamingClient:
         self.api_endpoint = api_endpoint or settings.llm_api_endpoint
         self.api_key = api_key or settings.llm_api_key
         self.model = model or settings.llm_model
-        self.user_email = user_email or settings.llm_user_email  # Usar email de settings por defecto
+        self.user_email = user_email or settings.llm_user_email
         self.timeout = timeout
-        self.session_uuid = str(uuid4())
+        # IMPORTANTE: uuid debe ser la API KEY según especificación de CodingBuddy
+        self.session_uuid = self.api_key
         
         logger.info(f"LLMStreamingClient inicializado - Modelo: {self.model}, Usuario: {self.user_email}")
     
@@ -55,7 +56,7 @@ class LLMStreamingClient:
         temperature: float = 0.7,
         language: str = "es",
         system_prompt: Optional[str] = None
-    ) -> str:
+    ) -> dict:
         """
         Construye el body JSON para la request al LLM.
         
@@ -65,24 +66,25 @@ class LLMStreamingClient:
             message_content: Mensaje del usuario
             temperature: Parámetro de creatividad (0-1)
             language: Idioma de respuesta (ej: es, en)
-            system_prompt: Prompt del sistema (role: system)
+            system_prompt: Prompt del sistema
         
         Returns:
-            String JSON formateado para la API
+            Diccionario con la estructura del request
         """
         body = {
             "model": self.model,
-            "uuid": self.session_uuid,
+            "uuid": self.session_uuid,  # uuid = API_KEY
             "message": {
                 "role": "user",
                 "content": message_content
             },
+            "prompt": system_prompt,  # Campo prompt separado
             "temperature": temperature,
             "language": language,
             "user": self.user_email
         }
         
-        return json.dumps(body, ensure_ascii=False)
+        return body
     
     def stream(
         self,
@@ -107,20 +109,20 @@ class LLMStreamingClient:
                 print(chunk, end="", flush=True)
         """
         headers = {
-            "X-API-KEY": self.api_key
+            "X-API-KEY": self.api_key,
+            "Content-Type": "application/json"
         }
         
-        body_str = self._build_request_body(
+        body = self._build_request_body(
             message_content=message,
             temperature=temperature,
             language=language,
             system_prompt=system_prompt
         )
         
-        data = {"body_str": body_str}
-        
         logger.debug(f"Enviando request al LLM: {self.api_endpoint}")
         logger.debug(f"Modelo: {self.model}, Temperature: {temperature}")
+        logger.debug(f"Body: {json.dumps(body, indent=2, ensure_ascii=False)}")
         
         attempt = 0
         last_error = None
@@ -130,7 +132,7 @@ class LLMStreamingClient:
                 with requests.post(
                     self.api_endpoint,
                     headers=headers,
-                    data=data,  # Usar data en lugar de json (igual que ejemplo)
+                    json=body,  # Enviar como JSON directamente
                     stream=True,
                     timeout=self.timeout
                 ) as response:
@@ -221,14 +223,33 @@ class LLMStreamingClient:
         Returns:
             Respuesta completa del LLM
         
-        Uso para fallbacks o endpoints que no requieren streaming.
+        Uso para endpoints que no requieren streaming.
         """
-        full_response = ""
-        for chunk in self.stream(
-            message=message,
+        headers = {
+            "X-API-KEY": self.api_key,
+            "Content-Type": "application/json"
+        }
+        
+        body = self._build_request_body(
+            message_content=message,
             temperature=temperature,
             language=language,
             system_prompt=system_prompt
-        ):
-            full_response += chunk
-        return full_response
+        )
+        
+        try:
+            response = requests.post(
+                self.api_endpoint,
+                headers=headers,
+                json=body,
+                timeout=self.timeout
+            )
+            response.raise_for_status()
+            
+            # La respuesta es JSON con formato: {"role": "assistant", "content": "...", "info_detail": {...}}
+            response_json = response.json()
+            return response_json.get("content", "")
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error obteniendo respuesta del LLM: {e}")
+            return f"Error al conectar con el LLM: {str(e)}"

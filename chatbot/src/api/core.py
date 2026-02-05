@@ -13,8 +13,13 @@ class ChatRequest(BaseModel):
 class GameRecommendation(BaseModel):
     name: str
     genres: List[str]
-    price: Optional[float]
-    description: Optional[str]
+    price: Optional[float] = None  # Mantener por compatibilidad
+    current_price_retail: Optional[float] = None
+    current_price_keyshop: Optional[float] = None
+    description: Optional[str] = None
+    metacritic: Optional[int] = None
+    header_image: Optional[str] = None
+    ggdeals_url: Optional[str] = None
     relevance_score: Optional[float] = None
 
 class ChatResponse(BaseModel):

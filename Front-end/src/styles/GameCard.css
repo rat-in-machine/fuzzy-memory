@@ -1,0 +1,100 @@
+/* GameCard.css */
+.game-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  color: white;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.game-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.game-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.game-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: bold;
+  flex: 1;
+}
+
+.wishlist-btn {
+  background: none;
+  border: 2px solid white;
+  color: white;
+  font-size: 1.5em;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.wishlist-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.wishlist-btn.active {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  color: white;
+}
+
+.game-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.genre-badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.game-price {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #ffd700;
+}
+
+.game-description {
+  margin: 10px 0;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.game-details-btn {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.game-details-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
