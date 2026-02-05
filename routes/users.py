@@ -28,7 +28,7 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
-@router.post("/", response_model=int)
+@router.post("/create", response_model=int)
 def create_user(user: UserCreate):
     user_id = user_dao.create(
         name=user.name,
@@ -42,8 +42,7 @@ def create_user(user: UserCreate):
 
     return user_id
 
-
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/get/{user_id}", response_model=UserResponse)
 def get_user(user_id: int):
     row = user_dao.get(user_id)
     if not row:
@@ -56,8 +55,17 @@ def get_user(user_id: int):
         role_id=row[4]
     )
 
+@router.delete("/delete/{user_id}", response_model=dict)
+def delete_user(user_id: int):
+    """
+    Elimina un usuario por su ID.
+    """
+    success = user_dao.delete(user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return {"detail": f"Usuario con ID {user_id} eliminado correctamente"}
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/list", response_model=List[UserResponse])
 def list_users():
     rows = user_dao.list_all()
 
@@ -71,7 +79,7 @@ def list_users():
         for row in rows
     ]
 
-@router.get("/{user_id}/with_role", response_model=UserWithRoleResponse)
+@router.get("/get_with_role/{user_id}", response_model=UserWithRoleResponse)
 def get_user_with_role(user_id: int):
     row = user_dao.get_with_role(user_id)
     if not row:

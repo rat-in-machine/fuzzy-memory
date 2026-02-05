@@ -53,3 +53,10 @@ class UserDAO:
             "SELECT id, name, password, email, role_id FROM [User] WHERE email = ?",
             (email,)
         )
+        
+    def delete(self, user_id: int) -> bool:
+        """
+        Elimina un usuario por su ID. Devuelve True si se eliminó un registro.
+        """
+        cursor = self.db.execute("DELETE FROM [User] WHERE id = ?", (user_id,))
+        return cursor.rowcount > 0

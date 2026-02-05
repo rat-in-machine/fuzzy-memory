@@ -40,13 +40,13 @@ class GameDAO:
         """
         Obtiene un juego por su appid.
         """
-        return self.db.fetchone("SELECT * FROM Games WHERE appid = ?", (appid,))
+        return self.db.fetchone("SELECT appid, name, short_description, currency, initial_price, final_price, discount_percent, is_free, windows, mac, linux FROM Games WHERE appid = ?", (appid,))
 
     def list_all(self) -> List[pyodbc.Row]:
         """
         Lista todos los juegos.
         """
-        return self.db.fetchall("SELECT appid, name, short_description, is_free FROM Games")
+        return self.db.fetchall("SELECT appid, name, short_description, currency, initial_price, final_price, discount_percent, is_free, windows, mac, linux FROM Games")
 
     def delete(self, appid: int) -> None:
         """

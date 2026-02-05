@@ -4,6 +4,8 @@ from dataclasses import asdict
 
 from structures.gg_deal_game import GGDealGame
 from utils.gg_deals_requests import GGDealsPricesAPI
+from fastapi import Path
+
 
 from typing import List, Dict, Optional, cast
 from structures.dao.game_dao import GameDAO 
@@ -30,20 +32,56 @@ class GameResponse(BaseModel):
     appid: int
     name: str
     short_description: Optional[str]
+    currency: Optional[str]
+    initial_price: Optional[float]
+    final_price: Optional[float]
+    discount_percent: Optional[int]
     is_free: bool
+    windows: bool
+    mac: bool
+    linux: bool
+
+@router.get("/{appid}", response_model=GameResponse)
+def get_game(appid: int = Path(..., description="AppID del juego a consultar")):
+    row = game_dao.get(appid)
+    if not row:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    return GameResponse(
+        appid=int(row[0]),
+        name=row[1],
+        short_description=row[2],
+        currency=row[3],
+        initial_price=row[4],
+        final_price=row[5],
+        discount_percent=row[6],
+        is_free=bool(row[7]),
+        windows=bool(row[8]),
+        mac=bool(row[9]),
+        linux=bool(row[10])
+    )
+
+@router.delete("/{appid}", response_model=dict)
+def delete_game(appid: int = Path(..., description="AppID del juego a eliminar")):
+    """
+    Elimina un juego por su AppID.
+    """
+    row = game_dao.get(appid)
+    if not row:
+        raise HTTPException(status_code=404, detail="Game not found")
+    
+    game_dao.delete(appid)
+    return {"detail": f"Game with appid {appid} deleted successfully"}
+
+
+
 
 @router.post("/", response_model=GameResponse)
 def create_game(game: GameCreate):
-    """
-    Almacena un juego dentro de la base de datos.
-    
-    :param game: Información del videojuego a agregar.
-    :type game: GameCreate
-    """
-    
     existing = game_dao.get(game.appid)
     if existing:
         raise HTTPException(status_code=400, detail="Game already exists")
+    
     game_dao.create(
         appid=game.appid,
         name=game.name,
@@ -57,31 +95,26 @@ def create_game(game: GameCreate):
         mac=game.mac,
         linux=game.linux
     )
-    
-    return GameResponse(
-        appid=game.appid,
-        name=game.name,
-        short_description=game.short_description,
-        is_free=game.is_free
-    )
 
 @router.get("/", response_model=List[GameResponse])
 def list_games():
-    """
-    Lista los videojuegos de la base de datos.
-    """
-    
     rows = game_dao.list_all()
-    
+
     return [
         GameResponse(
             appid=int(row[0]),
             name=row[1],
             short_description=row[2],
-            is_free=bool(row[3])
+            currency=row[3],
+            initial_price=row[4],
+            final_price=row[5],
+            discount_percent=row[6],
+            is_free=bool(row[7]),
+            windows=bool(row[8]),
+            mac=bool(row[9]),
+            linux=bool(row[10])
         ) for row in rows
     ]
-    
 
 @router.get("/historical-lows")
 def get_historical_lows(
