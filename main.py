@@ -25,10 +25,10 @@ if not os.path.exists(DB_FILE):
 db = SQLiteDB(DB_FILE)
 db.connect()  # conexión abierta durante todo el ciclo de vida de la app
 
-game_dao = GameDAO(db)  # inicializar DAO de juegos
-wishlist_dao = WishlistDAO(db)  # inicializar DAO de wishlist
-role_dao = RoleDAO(db)      # DAO de roles
-user_dao = UserDAO(db)      # DAO de usuarios
+game_dao = GameDAO(db)          # DAO de juegos
+wishlist_dao = WishlistDAO(db)  # DAO de wishlist
+role_dao = RoleDAO(db)          # DAO de roles
+user_dao = UserDAO(db)          # DAO de usuarios
 
 if hasattr(games, "game_dao"):
     games.game_dao = game_dao  # inyectar DAO en router games
@@ -54,7 +54,6 @@ if hasattr(users, "user_dao"):
     users.user_dao = user_dao
 else:
     raise RuntimeError("user router no tiene atributo user_dao")
-
 
 app.include_router(games.router, prefix="/games", tags=["games"])
 app.include_router(wishlist.router, prefix="/wishlist", tags=["wishlist"])

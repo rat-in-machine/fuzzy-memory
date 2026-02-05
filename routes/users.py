@@ -33,5 +33,5 @@ def get_user_with_role(user_id: int):
     if not row:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     user = {k: row[k] for k in ["id", "name", "password", "email", "role_id"]}
-    role = {k: row[k] for k in ["role_name", "can_select", "can_insert", "can_update", "can_delete"]}
+    role = {k: row[k] for k in ["role_name", "can_query", "can_insert", "can_update", "can_delete"]}
     return {"user": user, "role": role}
