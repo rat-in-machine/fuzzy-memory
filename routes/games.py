@@ -27,6 +27,8 @@ class GameCreate(BaseModel):
     windows: bool = True
     mac: bool = False
     linux: bool = False
+    cover_image_url : Optional[str] = ""
+
 
 class GameResponse(BaseModel):
     appid: int
@@ -40,6 +42,7 @@ class GameResponse(BaseModel):
     windows: bool
     mac: bool
     linux: bool
+    cover_image_url : Optional[str] = ""
 
 @router.get("/{appid}", response_model=GameResponse)
 def get_game(appid: int = Path(..., description="AppID del juego a consultar")):
@@ -58,7 +61,8 @@ def get_game(appid: int = Path(..., description="AppID del juego a consultar")):
         is_free=bool(row[7]),
         windows=bool(row[8]),
         mac=bool(row[9]),
-        linux=bool(row[10])
+        linux=bool(row[10]),
+        cover_image_url=row[11]
     )
 
 @router.delete("/{appid}", response_model=dict)
@@ -93,7 +97,8 @@ def create_game(game: GameCreate):
         is_free=game.is_free,
         windows=game.windows,
         mac=game.mac,
-        linux=game.linux
+        linux=game.linux,
+        cover_image_url=game.cover_image_url or ""
     )
 
 @router.get("/", response_model=List[GameResponse])
@@ -112,7 +117,8 @@ def list_games():
             is_free=bool(row[7]),
             windows=bool(row[8]),
             mac=bool(row[9]),
-            linux=bool(row[10])
+            linux=bool(row[10]),
+            cover_image_url=row[11]
         ) for row in rows
     ]
 

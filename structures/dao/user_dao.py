@@ -16,11 +16,11 @@ class UserDAO:
         """
         cursor = self.db.execute(
             """
-            INSERT INTO [User] (name, password, email, role_id)
+            INSERT INTO [Users] (name, password, email, role_id)
             OUTPUT INSERTED.id
             VALUES (?, ?, ?, ?)
             """,
-            (name, password, email, role_id)
+            (name, password, email,     role_id)
         )
         row = cursor.fetchone()
         return row.id if row else -1
@@ -29,13 +29,13 @@ class UserDAO:
         """
         Obtiene un usuario por su ID.
         """
-        return self.db.fetchone("SELECT id, name, password, email, role_id FROM [User] WHERE id = ?", (user_id,))
+        return self.db.fetchone("SELECT id, name, password, email, role_id FROM [Users] WHERE id = ?", (user_id,))
 
     def list_all(self) -> List[pyodbc.Row]:
         """
         Lista todos los usuarios.
         """
-        return self.db.fetchall("SELECT id, name, password, email, role_id FROM [User]")
+        return self.db.fetchall("SELECT id, name, password, email, role_id FROM [Users]")
 
     def get_with_role(self, user_id: int) -> Optional[pyodbc.Row]:
         """
@@ -43,14 +43,14 @@ class UserDAO:
         """
         return self.db.fetchone("""
             SELECT u.id, u.name, u.password, u.email, r.name AS role_name, r.id, r.can_query, r.can_insert, r.can_update, r.can_delete
-            FROM [User] u
-            JOIN Role r ON u.role_id = r.id
+            FROM [Users] u
+            JOIN Roles r ON u.role_id = r.id
             WHERE u.id = ?
         """, (user_id,))
 
     def get_by_email(self, email: str) -> Optional[pyodbc.Row]:
         return self.db.fetchone(
-            "SELECT id, name, password, email, role_id FROM [User] WHERE email = ?",
+            "SELECT id, name, password, email, role_id FROM [Users] WHERE email = ?",
             (email,)
         )
         
@@ -58,5 +58,5 @@ class UserDAO:
         """
         Elimina un usuario por su ID. Devuelve True si se eliminó un registro.
         """
-        cursor = self.db.execute("DELETE FROM [User] WHERE id = ?", (user_id,))
+        cursor = self.db.execute("DELETE FROM [Users] WHERE id = ?", (user_id,))
         return cursor.rowcount > 0

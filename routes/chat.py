@@ -23,7 +23,7 @@ async def chat(request: ChatRequest):
 
     return ChatResponse(
         answer=answer,
-        chat_id=request.chat_id
+        chat_id=request.chat_id # type: ignore
     )
     
 @router.post("/stream")

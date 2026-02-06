@@ -20,7 +20,7 @@ class GameDAO:
                currency: Optional[str], initial_price: Optional[float],
                final_price: Optional[float], discount_percent: Optional[int],
                is_free: bool,
-               windows: bool, mac: bool, linux: bool) -> None:
+               windows: bool, mac: bool, linux: bool, cover_image_url : str) -> None:
         """
         Crea un nuevo registro de juego.
         """
@@ -28,7 +28,8 @@ class GameDAO:
             """
             INSERT INTO Games
             (appid, name, short_description, currency, initial_price,
-             final_price, discount_percent, is_free, windows, mac, linux)
+             final_price, discount_percent, is_free, windows, mac, linux,
+             cover_image_url)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (appid, name, short_description, currency, initial_price,
@@ -40,13 +41,13 @@ class GameDAO:
         """
         Obtiene un juego por su appid.
         """
-        return self.db.fetchone("SELECT appid, name, short_description, currency, initial_price, final_price, discount_percent, is_free, windows, mac, linux FROM Games WHERE appid = ?", (appid,))
+        return self.db.fetchone("SELECT appid, name, short_description, currency, initial_price, final_price, discount_percent, is_free, windows, mac, linux, cover_image_url FROM Games WHERE appid = ?", (appid,))
 
     def list_all(self) -> List[pyodbc.Row]:
         """
         Lista todos los juegos.
         """
-        return self.db.fetchall("SELECT appid, name, short_description, currency, initial_price, final_price, discount_percent, is_free, windows, mac, linux FROM Games")
+        return self.db.fetchall("SELECT appid, name, short_description, currency, initial_price, final_price, discount_percent, is_free, windows, mac, linux, cover_image_url FROM Games")
 
     def delete(self, appid: int) -> None:
         """

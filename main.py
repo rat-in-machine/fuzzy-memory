@@ -13,16 +13,21 @@ from structures.dao.user_dao import UserDAO
 from routes.chat import router as chat_router
 
 from routes import games, wishlist, role, users
+# from utils.config import (
+#     AZURE_SQL_SERVER, AZURE_SQL_SERVER_DATABASE,
+#     AZURE_SQL_SERVER_USERNAME, AZURE_SQL_SERVER_PASSWORD
+# )
+from utils.config import AZURE_SQL_SERVER
+from utils.config import AZURE_SQL_SERVER_DATABASE
+from utils.config import AZURE_SQL_SERVER_USERNAME
+from utils.config import AZURE_SQL_SERVER_PASSWORD
 
 load_dotenv()
 
 # # =====================================================
 # # CONFIGURACIÓN DE AZURE SQL
 # # =====================================================
-AZURE_SQL_SERVER = os.getenv("AZURE_SQL_SERVER") or ""
-AZURE_SQL_SERVER_DATABASE = os.getenv("AZURE_SQL_SERVER_DATABASE") or ""
-AZURE_SQL_SERVER_USERNAME = os.getenv("AZURE_SQL_SERVER_USERNAME") or ""
-AZURE_SQL_SERVER_PASSWORD = os.getenv("AZURE_SQL_SERVER_PASSWORD") or ""
+
 
 # # =====================================================
 # # INICIALIZAR LA APLICACIÓN FASTAPI

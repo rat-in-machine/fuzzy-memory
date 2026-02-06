@@ -23,7 +23,7 @@ class RoleDAO:
     ) -> int:
         cursor = self.db.execute(
             """
-            INSERT INTO Role (name, can_query, can_insert, can_update, can_delete)
+            INSERT INTO Roles (name, can_query, can_insert, can_update, can_delete)
             OUTPUT INSERTED.id
             VALUES (?, ?, ?, ?, ?)
             """,
@@ -37,10 +37,10 @@ class RoleDAO:
         """
         Obtiene un rol por su ID.
         """
-        return self.db.fetchone("SELECT id, name, can_query, can_update, can_delete, can_insert FROM Role WHERE id = ?", (role_id,))
+        return self.db.fetchone("SELECT id, name, can_query, can_update, can_delete, can_insert FROM Roles WHERE id = ?", (role_id,))
 
     def list_all(self) -> List[pyodbc.Row]:
         """
         Lista todos los roles.
         """
-        return self.db.fetchall("SELECT id, name, can_query, can_update, can_delete, can_insert FROM Role")
+        return self.db.fetchall("SELECT id, name, can_query, can_update, can_delete, can_insert FROM Roles")
