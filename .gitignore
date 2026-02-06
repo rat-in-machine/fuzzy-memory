@@ -1,12 +1,47 @@
-# Python-generated files
+# Entornos virtuales
+venv/
+.env/
+.venv/
+ENV/
+env/
+
+# Bytecode de Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+
+# Archivos de configuración locales
+*.env
+
+# Logs
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Tests y cobertura
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build / distribución
 build/
 dist/
-wheels/
-*.egg-info
+*.egg-info/
 
-# Virtual environments
-.venv
-.env
-.vscode
+# Jupyter
+.ipynb_checkpoints/
+
+# MyPy / type checkers
+.mypy_cache/
+.pyre/
+
+# Ruff / linters
+.ruff_cache/
